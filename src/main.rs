@@ -20,11 +20,11 @@ fn main() {
     let mut last_header: Option<Header> = None;
     let empty = Regex::new(r#"^\s*$"#).unwrap();
     let header_versioned =
-        Regex::new(r#"^(?P<package>[a-zA-z]([a-zA-z0-9.-]+?))-(?P<version>(\d+(\.\d+)*)).+?is out of bounds for:$"#).unwrap();
+        Regex::new(r#"^(?P<package>[a-zA-z]([a-zA-z0-9.-]*?))-(?P<version>(\d+(\.\d+)*)).+?is out of bounds for:$"#).unwrap();
     let header_missing =
-        Regex::new(r#"^(?P<package>[a-zA-z]([a-zA-z0-9.-]+)).+?depended on by:$"#).unwrap();
+        Regex::new(r#"^(?P<package>[a-zA-z]([a-zA-z0-9.-]*)).+?depended on by:$"#).unwrap();
     let package =
-        Regex::new(r#"^- \[ \] (?P<package>[a-zA-z]([a-zA-z0-9.-]+?))-(?P<version>(\d+(\.\d+)*)).+?Used by: (?P<component>.+)$"#)
+        Regex::new(r#"^- \[ \] (?P<package>[a-zA-z]([a-zA-z0-9.-]*?))-(?P<version>(\d+(\.\d+)*)).+?Used by: (?P<component>.+)$"#)
         .unwrap();
 
     if let Ok(lines) = read_lines("./comments.txt") {
