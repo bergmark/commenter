@@ -101,7 +101,7 @@ pub fn diff_snapshot(a: String, b: String) {
         let s = match diff {
             Diff::Left(a) => format!("- {name}-{a}"),
             Diff::Right(b) => format!("+ {name}-{b}"),
-            Diff::Both(a, b) => format!("~ {name}-{a} -> {b}"),
+            Diff::Both(a, b) => format!("^ {name}-{a} -> {b}"),
         };
         println!("{s}");
     }
