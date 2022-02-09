@@ -1,29 +1,26 @@
-use std::error::Error;
-use std::fs::File;
-use std::io::BufReader;
-
 use serde::{Deserialize, Deserializer};
 
 use crate::prelude::*;
 use crate::types::{Package, Version, VersionedPackage};
+use crate::yaml;
 
 #[derive(Deserialize)]
-struct SnapshotYaml {
+pub struct SnapshotYaml {
     // flags: BTreeMap<Package, BTreeMap<PackageFlag, bool>>,
     // publish_time
-    packages: Vec<SnapshotPackage>,
+    pub packages: Vec<SnapshotPackage>,
     // hidden
     // resolver
 }
 
 #[derive(Deserialize)]
-struct SnapshotPackage {
-    hackage: PackageWithVersionAndSha,
+pub struct SnapshotPackage {
+    pub hackage: PackageWithVersionAndSha,
     // pantry-tree
 }
 
 // zstd-0.1.3.0@sha256:4c0a372251068eb6086b8c3a0a9f347488f08b570a7705844ffeb2c720c97223,3723
-struct PackageWithVersionAndSha(VersionedPackage);
+pub struct PackageWithVersionAndSha(pub VersionedPackage);
 
 impl<'de> serde::Deserialize<'de> for PackageWithVersionAndSha {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -45,28 +42,18 @@ impl<'de> serde::Deserialize<'de> for PackageWithVersionAndSha {
     }
 }
 
-fn yaml_from_file<A, P: AsRef<Path>>(path: P) -> Result<A, Box<dyn Error>>
-where
-    A: for<'de> Deserialize<'de>,
-{
-    let file = File::open(path)?;
-    let reader = BufReader::new(file);
-    let u = serde_yaml::from_reader(reader)?;
-    Ok(u)
-}
-
-struct Snapshot {
-    packages: BTreeMap<Package, Diff<Version>>,
+pub struct Snapshot {
+    pub packages: BTreeMap<Package, Diff<Version>>,
 }
 
 #[derive(Clone, Copy)]
-enum Diff<A> {
+pub enum Diff<A> {
     Left(A),
     Right(A),
     Both(A, A),
 }
 
-fn to_diff(a: SnapshotYaml, b: SnapshotYaml) -> Snapshot {
+pub fn to_diff(a: SnapshotYaml, b: SnapshotYaml) -> Snapshot {
     let mut packages = BTreeMap::new();
     for s in a.packages {
         let package = s.hackage.0;
@@ -96,7 +83,10 @@ fn to_diff(a: SnapshotYaml, b: SnapshotYaml) -> Snapshot {
 }
 
 pub fn diff_snapshot(a: String, b: String) {
-    let diff = to_diff(yaml_from_file(a).unwrap(), yaml_from_file(b).unwrap());
+    let diff = to_diff(
+        yaml::yaml_from_file(a).unwrap(),
+        yaml::yaml_from_file(b).unwrap(),
+    );
     for (name, diff) in diff.packages {
         let s = match diff {
             Diff::Left(a) => format!("- {name}-{a}"),

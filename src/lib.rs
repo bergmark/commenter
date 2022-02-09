@@ -5,10 +5,14 @@ use std::path::Path;
 use std::process::Command;
 
 pub mod add;
+pub mod affected;
+mod build_constraints;
+pub mod multiple;
 mod prelude;
 mod regex;
 pub mod snapshot;
 mod types;
+mod yaml;
 
 use prelude::*;
 use types::*;
