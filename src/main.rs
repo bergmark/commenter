@@ -1,5 +1,7 @@
 use structopt::StructOpt;
 
+use commenter::command;
+
 #[derive(Debug, StructOpt)]
 #[structopt(
     name = "commenter",
@@ -18,12 +20,12 @@ enum Opt {
 fn main() {
     let opt = Opt::from_args();
     match opt {
-        Opt::Add => commenter::add::add(),
-        Opt::Affected { a, b } => commenter::affected::affected(a, b),
-        Opt::Clear => commenter::clear(),
-        Opt::DiffSnapshot { a, b } => commenter::snapshot::diff_snapshot(a, b),
-        Opt::Disabled => commenter::disabled(),
-        Opt::Multiple => commenter::multiple::multiple(),
-        Opt::Outdated => commenter::outdated(),
+        Opt::Add => command::add::add(),
+        Opt::Affected { a, b } => command::affected::affected(a, b),
+        Opt::Clear => command::clear(),
+        Opt::DiffSnapshot { a, b } => command::diff_snapshot::diff_snapshot(a, b),
+        Opt::Disabled => command::disabled::disabled(),
+        Opt::Multiple => command::multiple::multiple(),
+        Opt::Outdated => command::outdated::outdated(),
     }
 }

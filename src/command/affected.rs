@@ -77,7 +77,7 @@ mod test {
 
     #[test]
     fn test_affected() {
-        let diff = parse_diff(include_str!("../test/snapshot-diff.txt"));
+        let diff = parse_diff(include_str!("../../test/snapshot-diff.txt"));
         affected_impl(diff, "test/build-constraints.yaml")
     }
 }

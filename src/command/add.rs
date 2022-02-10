@@ -1,5 +1,6 @@
 use std::io::{self, BufRead};
 
+use crate::handle::{handle, Location};
 use crate::prelude::*;
 use crate::regex::cap_into;
 use crate::types::{Package, Version, VersionedPackage};
@@ -179,7 +180,7 @@ pub fn add() {
         tests = auto_tests.len(),
         benches = auto_benches.len()
     );
-    crate::add(auto_lib_exes, auto_tests, auto_benches);
+    adder(auto_lib_exes, auto_tests, auto_benches);
 }
 
 fn printer(
@@ -206,4 +207,16 @@ fn insert(h: &mut H, header: Header, package: &Package, version: &Version, compo
         version.clone(),
         component.to_owned(),
     ));
+}
+
+fn adder(lib: Vec<String>, test: Vec<String>, bench: Vec<String>) {
+    handle(true, |loc, mut lines| {
+        lines.extend(match loc {
+            Location::Lib => lib.clone(),
+            Location::Test => test.clone(),
+            Location::Bench => bench.clone(),
+        });
+        lines.sort();
+        lines
+    });
 }
