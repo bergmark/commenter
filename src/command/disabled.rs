@@ -1,12 +1,13 @@
-use crate::handle::{handle, Location};
 use crate::prelude::*;
+
+use crate::handle::{handle, Location};
 use crate::types::*;
 
 type M = BTreeMap<Package, (Vec<VersionedPackage>, Option<usize>)>;
 
-pub fn disabled() {
+pub fn disabled(build_constraints: &Path) {
     let mut disabled_transitively: Vec<DisabledTransitively> = vec![];
-    handle(false, |loc, lines| {
+    handle(build_constraints, false, |loc, lines| {
         match loc {
             Location::Lib => disabled_transitively.extend(
                 lines

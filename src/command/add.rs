@@ -96,7 +96,7 @@ fn parse_header_missing(s: &str) -> Option<Header> {
 
 type H = HashMap<Header, Vec<(Package, Version, String)>>;
 
-pub fn add() {
+pub fn add(build_constraints: &Path) {
     let mut lib_exes: H = Default::default();
     let mut tests: H = Default::default();
     let mut benches: H = Default::default();
@@ -180,7 +180,7 @@ pub fn add() {
         tests = auto_tests.len(),
         benches = auto_benches.len()
     );
-    adder(auto_lib_exes, auto_tests, auto_benches);
+    adder(build_constraints, auto_lib_exes, auto_tests, auto_benches);
 }
 
 fn printer(
@@ -209,8 +209,8 @@ fn insert(h: &mut H, header: Header, package: &Package, version: &Version, compo
     ));
 }
 
-fn adder(lib: Vec<String>, test: Vec<String>, bench: Vec<String>) {
-    handle(true, |loc, mut lines| {
+fn adder(build_constraints: &Path, lib: Vec<String>, test: Vec<String>, bench: Vec<String>) {
+    handle(build_constraints, true, |loc, mut lines| {
         lines.extend(match loc {
             Location::Lib => lib.clone(),
             Location::Test => test.clone(),

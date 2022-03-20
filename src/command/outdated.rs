@@ -1,11 +1,12 @@
+use crate::prelude::*;
+
 use crate::handle::{handle, DisabledPackage};
 use crate::latest_version::latest_version;
-use crate::prelude::*;
 use crate::types::*;
 
-pub fn outdated() {
+pub fn outdated(build_constraints: &Path) {
     let mut all: Vec<String> = vec![];
-    let (versioned, disabled) = handle(false, |_loc, lines| {
+    let (versioned, disabled) = handle(build_constraints, false, |_loc, lines| {
         all.extend(lines);
         vec![]
     });

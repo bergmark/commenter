@@ -1,4 +1,5 @@
-pub use std::path::Path;
+pub use std::fmt::Debug;
+pub use std::path::{Path, PathBuf};
 
 pub use lazy_regex::regex;
 pub use regex::Regex;

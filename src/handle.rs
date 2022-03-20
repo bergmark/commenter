@@ -1,26 +1,29 @@
+use crate::prelude::*;
+
 use std::fs::File;
 use std::io::{BufRead, BufReader, LineWriter, Lines, Write};
-use std::path::Path;
 
-use crate::prelude::*;
 use crate::types::*;
 
 pub struct DisabledPackage {
     pub package: String,
 }
 
-pub fn handle<F>(write: bool, mut f: F) -> (Vec<VersionedPackage>, Vec<DisabledPackage>)
+pub fn handle<F>(
+    build_constraints: &Path,
+    write: bool,
+    mut f: F,
+) -> (Vec<VersionedPackage>, Vec<DisabledPackage>)
 where
     F: FnMut(Location, Vec<String>) -> Vec<String>,
 {
-    let path = "build-constraints.yaml";
     let mut new_lines: Vec<String> = vec![];
     let mut versioned_packages: Vec<VersionedPackage> = vec![];
     let mut disabled_packages: Vec<DisabledPackage> = vec![];
 
     let mut state = State::LookingForLibBounds;
     let mut buf = vec![];
-    for line in read_lines(path).map(|s| s.unwrap()) {
+    for line in read_lines(build_constraints).map(|s| s.unwrap()) {
         if let Some(versioned_package) = parse_versioned_package_yaml(&line) {
             versioned_packages.push(versioned_package);
         } else if let Some(disabled_package) = parse_disabled_package(&line) {
@@ -86,7 +89,7 @@ where
     }
 
     if write {
-        let file = File::create(path).unwrap();
+        let file = File::create(build_constraints).unwrap();
         let mut file = LineWriter::new(file);
 
         for line in new_lines {

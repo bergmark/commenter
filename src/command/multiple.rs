@@ -1,7 +1,9 @@
+use crate::prelude::*;
+
 use crate::build_constraints;
 
-pub fn multiple() {
-    let bc = build_constraints::parse("build-constraints.yaml");
+pub fn multiple(build_constraints: &Path) {
+    let bc = build_constraints::parse(build_constraints);
     let m = build_constraints::transpose(bc);
     for (package, maintainers) in m {
         if maintainers.len() >= 2 {

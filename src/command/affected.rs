@@ -1,16 +1,18 @@
+use crate::prelude::Path;
+
 use crate::build_constraints;
 use crate::snapshot::{self, Diff, Snapshot};
 use crate::yaml;
 
-pub fn affected(a: String, b: String) {
+pub fn affected(build_constraints: &Path, a: String, b: String) {
     let diff = snapshot::to_diff(
         yaml::yaml_from_file(a).unwrap(),
         yaml::yaml_from_file(b).unwrap(),
     );
-    affected_impl(diff, "build-constraints.yaml")
+    affected_impl(diff, build_constraints)
 }
 
-fn affected_impl(diff: Snapshot, bc: &str) {
+fn affected_impl(diff: Snapshot, bc: &Path) {
     let packages = build_constraints::parse(bc);
     let packages = build_constraints::transpose(packages);
     for (package, diff) in diff.packages {
@@ -78,6 +80,6 @@ mod test {
     #[test]
     fn test_affected() {
         let diff = parse_diff(include_str!("../../test/snapshot-diff.txt"));
-        affected_impl(diff, "test/build-constraints.yaml")
+        affected_impl(diff, &PathBuf::from("test/build-constraints.yaml"))
     }
 }

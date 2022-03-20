@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use structopt::StructOpt;
 
 use commenter::command;
@@ -8,24 +10,51 @@ use commenter::command;
     about = "Automates generation of bounds in  build-constraints.yaml"
 )]
 enum Opt {
-    Add,
-    Affected { a: String, b: String },
-    Clear,
-    DiffSnapshot { a: String, b: String },
-    Disabled,
-    Multiple,
-    Outdated,
+    Add {
+        #[structopt(short, long, default_value = "build-constraints.yaml")]
+        build_constraints: PathBuf,
+    },
+    Affected {
+        #[structopt(short, long, default_value = "build-constraints.yaml")]
+        build_constraints: PathBuf,
+        older: String,
+        newer: String,
+    },
+    Clear {
+        #[structopt(short, long, default_value = "build-constraints.yaml")]
+        build_constraints: PathBuf,
+    },
+    DiffSnapshot {
+        older: String,
+        newer: String,
+    },
+    Disabled {
+        #[structopt(short, long, default_value = "build-constraints.yaml")]
+        build_constraints: PathBuf,
+    },
+    Multiple {
+        #[structopt(short, long, default_value = "build-constraints.yaml")]
+        build_constraints: PathBuf,
+    },
+    Outdated {
+        #[structopt(short, long, default_value = "build-constraints.yaml")]
+        build_constraints: PathBuf,
+    },
 }
 
 fn main() {
     let opt = Opt::from_args();
     match opt {
-        Opt::Add => command::add::add(),
-        Opt::Affected { a, b } => command::affected::affected(a, b),
-        Opt::Clear => command::clear(),
-        Opt::DiffSnapshot { a, b } => command::diff_snapshot::diff_snapshot(a, b),
-        Opt::Disabled => command::disabled::disabled(),
-        Opt::Multiple => command::multiple::multiple(),
-        Opt::Outdated => command::outdated::outdated(),
+        Opt::Add { build_constraints } => command::add::add(&build_constraints),
+        Opt::Affected {
+            build_constraints,
+            older,
+            newer,
+        } => command::affected::affected(&build_constraints, older, newer),
+        Opt::Clear { build_constraints } => command::clear(&build_constraints),
+        Opt::DiffSnapshot { older, newer } => command::diff_snapshot::diff_snapshot(older, newer),
+        Opt::Disabled { build_constraints } => command::disabled::disabled(&build_constraints),
+        Opt::Multiple { build_constraints } => command::multiple::multiple(&build_constraints),
+        Opt::Outdated { build_constraints } => command::outdated::outdated(&build_constraints),
     }
 }

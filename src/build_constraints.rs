@@ -1,4 +1,5 @@
 use crate::prelude::*;
+
 use crate::regex::cap_into_opt;
 use crate::types::{Package, Version};
 use lazy_regex::regex;
@@ -51,10 +52,10 @@ pub fn transpose(m: BTreeMap<Maintainer, Vec<BCPackage>>) -> BTreeMap<Package, V
     res
 }
 
-pub fn parse(f: &str) -> BTreeMap<Maintainer, Vec<BCPackage>> {
+pub fn parse(f: &Path) -> BTreeMap<Maintainer, Vec<BCPackage>> {
     use crate::yaml;
-    let packages: BuildConstraints =
-        yaml::yaml_from_file(f).unwrap_or_else(|e| panic!("Could not open {f}, error: {e}"));
+    let packages: BuildConstraints = yaml::yaml_from_file(f)
+        .unwrap_or_else(|e| panic!("Could not open build-constraints file at {f:?}, error: {e}"));
     packages
         .packages
         .into_iter()
@@ -70,5 +71,5 @@ pub fn parse(f: &str) -> BTreeMap<Maintainer, Vec<BCPackage>> {
 
 #[test]
 fn test_parse_build_constraints() {
-    let _ = parse("test/build-constraints.yaml");
+    let _ = parse(&PathBuf::from("test/build-constraints.yaml"));
 }
