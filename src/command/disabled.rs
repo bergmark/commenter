@@ -11,8 +11,7 @@ pub fn disabled() {
             Location::Lib => disabled_transitively.extend(
                 lines
                     .into_iter()
-                    .map(|line| parse_disabled_transitviely(&line))
-                    .flatten()
+                    .filter_map(|line| parse_disabled_transitviely(&line))
                     .collect::<Vec<_>>(),
             ),
             Location::Test | Location::Bench => (),

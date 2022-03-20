@@ -53,7 +53,8 @@ pub fn transpose(m: BTreeMap<Maintainer, Vec<BCPackage>>) -> BTreeMap<Package, V
 
 pub fn parse(f: &str) -> BTreeMap<Maintainer, Vec<BCPackage>> {
     use crate::yaml;
-    let packages: BuildConstraints = yaml::yaml_from_file(f).unwrap();
+    let packages: BuildConstraints =
+        yaml::yaml_from_file(f).unwrap_or_else(|e| panic!("Could not open {f}, error: {e}"));
     packages
         .packages
         .into_iter()
