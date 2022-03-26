@@ -14,6 +14,12 @@ enum Opt {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
     },
+    AddLoop {
+        #[structopt(short, long, default_value = "build-constraints.yaml")]
+        build_constraints: PathBuf,
+        #[structopt(long)]
+        clear: bool,
+    },
     Affected {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
@@ -46,6 +52,10 @@ fn main() {
     let opt = Opt::from_args();
     match opt {
         Opt::Add { build_constraints } => command::add::add(&build_constraints),
+        Opt::AddLoop {
+            build_constraints,
+            clear,
+        } => command::add_loop::add_loop(&build_constraints, clear),
         Opt::Affected {
             build_constraints,
             older,

@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 pub mod add;
+pub mod add_loop;
 pub mod affected;
 pub mod diff_snapshot;
 pub mod disabled;

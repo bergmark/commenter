@@ -13,7 +13,7 @@ pub fn affected(build_constraints: &Path, a: String, b: String) {
 }
 
 fn affected_impl(diff: Snapshot, bc: &Path) {
-    let packages = build_constraints::parse(bc);
+    let packages = build_constraints::parse(bc).packages;
     let packages = build_constraints::transpose(packages);
     for (package, diff) in diff.packages {
         match diff {

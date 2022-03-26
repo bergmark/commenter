@@ -97,6 +97,12 @@ fn parse_header_missing(s: &str) -> Option<Header> {
 type H = HashMap<Header, Vec<(Package, Version, String)>>;
 
 pub fn add(build_constraints: &Path) {
+    add_impl(build_constraints, || {
+        io::stdin().lock().lines().flatten().collect()
+    });
+}
+
+pub fn add_impl(build_constraints: &Path, lines: impl FnOnce() -> Vec<String>) -> usize {
     let mut lib_exes: H = Default::default();
     let mut tests: H = Default::default();
     let mut benches: H = Default::default();
@@ -105,7 +111,7 @@ pub fn add(build_constraints: &Path) {
     // Ignore everything until the bounds issues show up.
     let mut process_line = false;
 
-    for line in io::stdin().lock().lines().flatten() {
+    for line in lines() {
         if regex!(r#"^\s*$"#).is_match(&line) {
             // noop
         } else if line == "curator: Snapshot dependency graph contains errors:" {
@@ -173,14 +179,18 @@ pub fn add(build_constraints: &Path) {
         }
     }
 
+    let lib_exe_count = auto_lib_exes.len();
+
     println!();
     println!(
         "Adding {lib_exes} libs, {tests} tests, {benches} benches to build-constraints.yaml",
-        lib_exes = auto_lib_exes.len(),
+        lib_exes = lib_exe_count,
         tests = auto_tests.len(),
         benches = auto_benches.len()
     );
     adder(build_constraints, auto_lib_exes, auto_tests, auto_benches);
+
+    lib_exe_count
 }
 
 fn printer(

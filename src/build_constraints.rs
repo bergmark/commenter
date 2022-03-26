@@ -7,6 +7,8 @@ use serde::{Deserialize, Deserializer};
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 struct BuildConstraints {
+    #[serde(rename = "ghc-version")]
+    ghc_version: String,
     packages: BTreeMap<String, Vec<BCPackage>>,
 }
 
@@ -52,12 +54,19 @@ pub fn transpose(m: BTreeMap<Maintainer, Vec<BCPackage>>) -> BTreeMap<Package, V
     res
 }
 
-pub fn parse(f: &Path) -> BTreeMap<Maintainer, Vec<BCPackage>> {
+pub struct ParsedBuildConstraints {
+    pub ghc_version: String,
+    pub packages: BTreeMap<Maintainer, Vec<BCPackage>>,
+}
+
+pub fn parse(f: &Path) -> ParsedBuildConstraints {
     use crate::yaml;
-    let packages: BuildConstraints = yaml::yaml_from_file(f)
+    let BuildConstraints {
+        ghc_version,
+        packages,
+    } = yaml::yaml_from_file(f)
         .unwrap_or_else(|e| panic!("Could not open build-constraints file at {f:?}, error: {e}"));
-    packages
-        .packages
+    let packages = packages
         .into_iter()
         .filter_map(|(k, v)| {
             if k.contains('@') {
@@ -66,7 +75,11 @@ pub fn parse(f: &Path) -> BTreeMap<Maintainer, Vec<BCPackage>> {
                 None
             }
         })
-        .collect()
+        .collect();
+    ParsedBuildConstraints {
+        ghc_version,
+        packages,
+    }
 }
 
 #[test]
