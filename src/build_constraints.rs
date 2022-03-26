@@ -69,10 +69,21 @@ pub fn parse(f: &Path) -> ParsedBuildConstraints {
     let packages = packages
         .into_iter()
         .filter_map(|(k, v)| {
-            if k.contains('@') {
-                Some((Maintainer(k), v))
-            } else {
+            if [
+                "Grandfathered dependencies",
+                "Abandoned packages",
+                "Unmaintained packages with compilation failures",
+                "Removed packages",
+                "GHC upper bounds",
+                "Compilation failures",
+                "Library and exe bounds failures",
+                "Stackage upper bounds",
+            ]
+            .contains(&&*k)
+            {
                 None
+            } else {
+                Some((Maintainer(k), v))
             }
         })
         .collect();
