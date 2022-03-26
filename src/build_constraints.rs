@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+use std::fmt;
+
 use crate::regex::cap_into_opt;
 use crate::types::{Package, Version};
 use lazy_regex::regex;
@@ -14,6 +16,20 @@ struct BuildConstraints {
 
 #[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Clone)]
 pub struct Maintainer(pub String);
+
+impl fmt::Display for Maintainer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Maintainer {
+    pub fn github_users(&self) -> impl Iterator<Item = &str> {
+        regex!(" +")
+            .split(&self.0)
+            .filter(|s| regex!("^@[^ ]+$").is_match(s))
+    }
+}
 
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct BCPackage {
@@ -57,6 +73,12 @@ pub fn transpose(m: BTreeMap<Maintainer, Vec<BCPackage>>) -> BTreeMap<Package, V
 pub struct ParsedBuildConstraints {
     pub ghc_version: String,
     pub packages: BTreeMap<Maintainer, Vec<BCPackage>>,
+}
+
+impl ParsedBuildConstraints {
+    pub fn maintainers(&self) -> impl Iterator<Item = &Maintainer> {
+        self.packages.keys()
+    }
 }
 
 pub fn parse(f: &Path) -> ParsedBuildConstraints {

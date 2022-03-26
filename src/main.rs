@@ -38,6 +38,10 @@ enum Opt {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
     },
+    Maintainers {
+        #[structopt(short, long, default_value = "build-constraints.yaml")]
+        build_constraints: PathBuf,
+    },
     Multiple {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
@@ -64,6 +68,9 @@ fn main() {
         Opt::Clear { build_constraints } => command::clear(&build_constraints),
         Opt::DiffSnapshot { older, newer } => command::diff_snapshot::diff_snapshot(older, newer),
         Opt::Disabled { build_constraints } => command::disabled::disabled(&build_constraints),
+        Opt::Maintainers { build_constraints } => {
+            command::maintainers::maintainers(&build_constraints)
+        }
         Opt::Multiple { build_constraints } => command::multiple::multiple(&build_constraints),
         Opt::Outdated { build_constraints } => command::outdated::outdated(&build_constraints),
     }

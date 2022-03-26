@@ -5,6 +5,7 @@ pub mod add_loop;
 pub mod affected;
 pub mod diff_snapshot;
 pub mod disabled;
+pub mod maintainers;
 pub mod multiple;
 pub mod outdated;
 
