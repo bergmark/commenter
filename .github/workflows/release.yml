@@ -21,7 +21,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUSTTARGET: ${{ matrix.target }}
-          EXTRA_FILES: "README.md CHANGELOG.md"
           ARCHIVE_TYPES: ${{ matrix.archive }}
           MINIFY: "yes"
   release_without_not_required:
