@@ -16,7 +16,7 @@ impl From<&str> for Package {
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Hash)]
-pub struct Version(pub String);
+pub struct Version(Vec<usize>);
 
 impl PartialOrd<Version> for Version {
     fn partial_cmp(&self, r: &Self) -> Option<Ordering> {
@@ -26,35 +26,36 @@ impl PartialOrd<Version> for Version {
 impl Ord for Version {
     fn cmp(&self, r: &Self) -> Ordering {
         use Ordering::*;
-        let a: Vec<_> = self
-            .0
-            .split('.')
-            .map(|c| c.parse::<usize>().unwrap())
-            .collect();
-        let b: Vec<_> =
-            r.0.split('.')
-                .map(|c| c.parse::<usize>().unwrap())
-                .collect();
-        for (a, b) in a.iter().zip(b.iter()) {
+        for (a, b) in self.0.iter().zip(r.0.iter()) {
             match a.cmp(b) {
                 Less => return Less,
                 Greater => return Greater,
                 Equal => {}
             }
         }
-        a.len().cmp(&b.len())
+        self.0.len().cmp(&r.0.len())
     }
 }
 
 impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
+        let s: String = self
+            .0
+            .iter()
+            .map(|c| format!("{c}"))
+            .collect::<Vec<String>>()
+            .join(".");
+        write!(f, "{s}")
     }
 }
 
-impl From<&str> for Version {
-    fn from(s: &str) -> Self {
-        Self(s.to_owned())
+impl TryFrom<&str> for Version {
+    type Error = std::num::ParseIntError;
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        s.split('.')
+            .map(|s| s.parse::<usize>())
+            .collect::<Result<_, _>>()
+            .map(Version)
     }
 }
 

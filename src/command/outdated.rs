@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 use crate::handle::{handle, DisabledPackage};
 use crate::latest_version::latest_version;
+use crate::regex::*;
 use crate::types::*;
 
 pub fn outdated(build_constraints: &Path) {
@@ -22,13 +23,13 @@ pub fn outdated(build_constraints: &Path) {
     let mut support: BTreeMap<(Package, Version), BTreeSet<(Package, Version)>> = BTreeMap::new();
     for v in all.into_iter() {
         let caps = regex!("tried ([^ ]+)-([^,-]+),").captures(&v).unwrap();
-        let package = Package(caps.get(1).unwrap().as_str().to_owned());
-        let version = Version(caps.get(2).unwrap().as_str().to_owned());
+        let package: Package = cap_into_n(&caps, 1);
+        let version: Version = cap_try_into_n(&caps, 2);
         map.insert(package.clone(), VersionTag::Auto(version.clone()));
 
         if let Some(caps) = regex!("does not support: ([^ ]+)-([^-]+)").captures(&v) {
-            let dep_package = Package(caps.get(1).unwrap().as_str().to_owned());
-            let dep_version = Version(caps.get(2).unwrap().as_str().to_owned());
+            let dep_package = cap_into_n(&caps, 1);
+            let dep_version = cap_try_into_n(&caps, 2);
             let entry = support.entry((dep_package, dep_version)).or_default();
             entry.insert((package, version));
         }

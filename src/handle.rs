@@ -3,6 +3,7 @@ use crate::prelude::*;
 use std::fs::File;
 use std::io::{BufRead, BufReader, LineWriter, Lines, Write};
 
+use crate::regex::*;
 use crate::types::*;
 
 pub struct DisabledPackage {
@@ -127,12 +128,12 @@ where
 
 fn parse_versioned_package_yaml(s: &str) -> Option<VersionedPackage> {
     if let Some(caps) = regex!(r#"- *([^ ]+) < *0 *# *([\d.]+)"#).captures(s) {
-        let package = Package(caps.get(1).unwrap().as_str().to_owned());
-        let version = Version(caps.get(2).unwrap().as_str().to_owned());
+        let package = cap_into_n(&caps, 1);
+        let version = cap_try_into_n(&caps, 2);
         Some(VersionedPackage { package, version })
     } else if let Some(caps) = regex!(r#"- *([^ ]+) *# *([\d.]+)"#).captures(s) {
-        let package = Package(caps.get(1).unwrap().as_str().to_owned());
-        let version = Version(caps.get(2).unwrap().as_str().to_owned());
+        let package = cap_into_n(&caps, 1);
+        let version = cap_try_into_n(&caps, 2);
         Some(VersionedPackage { package, version })
     } else {
         None
@@ -142,7 +143,7 @@ fn parse_versioned_package_yaml(s: &str) -> Option<VersionedPackage> {
 fn parse_disabled_package(s: &str) -> Option<DisabledPackage> {
     if !regex!(r#"- *([^ ]+) < *0 *# tried"#).is_match(s) {
         if let Some(caps) = regex!(r#"- *([^ ]+) < *0 *# *\d*[^\d ]"#).captures(s) {
-            let package = caps.get(1).unwrap().as_str().to_owned();
+            let package = cap_into_n(&caps, 1);
             Some(DisabledPackage { package })
         } else {
             None

@@ -38,7 +38,7 @@ fn affected_impl(diff: Snapshot, bc: &Path) {
 mod test {
     use super::*;
     use crate::prelude::*;
-    use crate::regex::{cap_into, cap_into_opt};
+    use crate::regex::*;
     use crate::snapshot::{Diff, Snapshot};
     use crate::types::{Package, Version};
 
@@ -66,8 +66,8 @@ mod test {
         let caps = r.captures(line).unwrap_or_else(|| panic!("{}", line));
         let c: String = cap_into(&caps, "symbol");
         let package: Package = cap_into(&caps, "package");
-        let version: Version = cap_into(&caps, "version");
-        let new_version: Option<Version> = cap_into_opt(&caps, "new_version");
+        let version: Version = cap_try_into(&caps, "version");
+        let new_version: Option<Version> = cap_try_into_opt(&caps, "new_version");
         (c, package, version, new_version)
     }
 

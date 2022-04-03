@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 use std::fmt;
 
-use crate::regex::cap_into_opt;
+use crate::regex::{cap_into_opt, cap_try_into_opt};
 use crate::types::{Package, Version};
 use lazy_regex::regex;
 use serde::{Deserialize, Deserializer};
@@ -50,7 +50,7 @@ impl<'de> serde::Deserialize<'de> for BCPackage {
         let cap = &r.captures(&s).unwrap();
         let package = cap_into_opt(cap, "package").unwrap();
         let bound = cap_into_opt(cap, "bound");
-        let version = cap_into_opt(cap, "version");
+        let version = cap_try_into_opt(cap, "version");
         Ok(BCPackage {
             package,
             bound,

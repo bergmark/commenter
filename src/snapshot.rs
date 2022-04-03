@@ -1,6 +1,7 @@
 use serde::{Deserialize, Deserializer};
 
 use crate::prelude::*;
+use crate::regex::*;
 use crate::types::{Package, Version, VersionedPackage};
 
 #[derive(Deserialize)]
@@ -29,8 +30,8 @@ impl<'de> serde::Deserialize<'de> for PackageWithVersionAndSha {
         let s: String = String::deserialize(deserializer)?;
         let r = regex!(r#"^(.+?)-([.\d]+)@sha256:[\da-z]+,\d+$"#);
         if let Some(caps) = r.captures(&s) {
-            let package = Package(caps.get(1).unwrap().as_str().to_owned());
-            let version = Version(caps.get(2).unwrap().as_str().to_owned());
+            let package = cap_into_n(&caps, 1);
+            let version = cap_try_into_n(&caps, 2);
             Ok(Self(VersionedPackage { package, version }))
         } else {
             Err(serde::de::Error::invalid_value(

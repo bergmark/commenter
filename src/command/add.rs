@@ -2,7 +2,7 @@ use std::io::{self, BufRead};
 
 use crate::handle::{handle, Location};
 use crate::prelude::*;
-use crate::regex::cap_into;
+use crate::regex::{cap_into, cap_try_into};
 use crate::types::{Package, Version, VersionedPackage};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -18,7 +18,7 @@ fn test_parse_package_with_component() {
         parse_package_with_component(line).unwrap(),
         PackageWithComponent {
             package: "captcha-2captcha".into(),
-            version: "0.1.0.0".into(),
+            version: "0.1.0.0".try_into().unwrap(),
             component: "library".into(),
         }
     );
@@ -29,7 +29,7 @@ fn test_parse_package_with_component() {
         parse_package_with_component(line).unwrap(),
         PackageWithComponent {
             package: "b9".into(),
-            version: "3.2.0".into(),
+            version: "3.2.0".try_into().unwrap(),
             component: "library".into(),
         }
     );
@@ -48,7 +48,7 @@ fn parse_package_with_component(s: &str) -> Option<PackageWithComponent> {
     );
     package.captures(s).map(|cap| PackageWithComponent {
         package: cap_into(&cap, "package"),
-        version: cap_into(&cap, "version"),
+        version: cap_try_into(&cap, "version"),
         component: cap_into(&cap, "component"),
     })
 }
@@ -60,7 +60,7 @@ fn test_parse_header_versioned() {
         parse_header_versioned(s).unwrap(),
         Header::Versioned(VersionedPackage {
             package: "aeson".into(),
-            version: "2.0.3.0".into(),
+            version: "2.0.3.0".try_into().unwrap(),
         })
     )
 }
@@ -72,7 +72,7 @@ fn parse_header_versioned(s: &str) -> Option<Header> {
     header_versioned.captures(s).map(|cap| {
         Header::Versioned(VersionedPackage {
             package: cap_into(&cap, "package"),
-            version: cap_into(&cap, "version"),
+            version: cap_try_into(&cap, "version"),
         })
     })
 }

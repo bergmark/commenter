@@ -40,7 +40,7 @@ fn all_versions(packages: impl Iterator<Item = Package>) -> BTreeMap<Package, BT
                 revision: _,
             } = v.unwrap();
             let e = res.entry(package.clone()).or_insert_with(BTreeSet::new);
-            e.insert(Version(version));
+            e.insert((&*version).try_into().unwrap());
         }
     }
     res

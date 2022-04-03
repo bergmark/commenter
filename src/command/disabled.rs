@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 use crate::handle::{handle, Location};
+use crate::regex::*;
 use crate::types::*;
 
 type M = BTreeMap<Package, (Vec<VersionedPackage>, Option<usize>)>;
@@ -70,9 +71,9 @@ fn parse_disabled_transitviely(s: &str) -> Option<DisabledTransitively> {
         r#"- *([^ ]+) < *0 *# tried [^ ]+-([\d.]+), but its \*[^*]+\* requires the disabled package: ([^ ]+)"#
     );
     if let Some(caps) = r.captures(s) {
-        let package = Package(caps.get(1).unwrap().as_str().to_owned());
-        let version = Version(caps.get(2).unwrap().as_str().to_owned());
-        let parent = Package(caps.get(3).unwrap().as_str().to_owned());
+        let package = cap_into_n(&caps, 1);
+        let version = cap_try_into_n(&caps, 2);
+        let parent = cap_into_n(&caps, 3);
         Some(DisabledTransitively {
             child: VersionedPackage { package, version },
             parent,
@@ -90,7 +91,7 @@ fn test_parse_disabled_transitviely() {
         Some(DisabledTransitively {
             child: VersionedPackage {
                 package: Package("Network-NineP".to_owned()),
-                version: Version("0.4.7.1".to_owned())
+                version: "0.4.7.1".try_into().unwrap()
             },
             parent: Package("mstate".to_owned()),
         })
