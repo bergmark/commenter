@@ -55,6 +55,8 @@ enum Opt {
         stackage_snapshots_path: PathBuf,
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
+        #[structopt(short, long)]
+        no_search_snapshots: bool,
         package: String,
     },
 }
@@ -82,10 +84,12 @@ fn main() {
         Opt::Outdated { build_constraints } => command::outdated::outdated(&build_constraints),
         Opt::PackageInfo {
             stackage_snapshots_path,
+            no_search_snapshots,
             build_constraints,
             package,
         } => command::package_info::package_info(
             &stackage_snapshots_path,
+            no_search_snapshots,
             &build_constraints,
             &package,
         ),
