@@ -55,7 +55,7 @@ pub struct BCPackage {
 impl BCPackage {
     fn parse(s: &str) -> Result<BCPackage, anyhow::Error> {
         let r = regex!(r#"^(?P<package>[\da-zA-z][\da-zA-Z-]*) *(?:(?P<bound>.+?))? *$"#);
-        let cap = &r.captures(&s).unwrap();
+        let cap = &r.captures(s).unwrap();
         let package = cap_into_opt(cap, "package").unwrap();
         let bound = cap_into_opt(cap, "bound");
         Ok(BCPackage { package, bound })
@@ -172,8 +172,8 @@ pub fn parse(f: &Path) -> BuildConstraints {
         .unwrap_or_else(|e| panic!("Could not open build-constraints file at {f:?}, error: {e}"));
     let packages = packages
         .into_iter()
-        .filter_map(|(k, v)| {
-            if [
+        .map(|(k, v)| {
+            let maintainer = if [
                 "Grandfathered dependencies",
                 "Abandoned packages",
                 "Unmaintained packages with compilation failures",
@@ -185,10 +185,11 @@ pub fn parse(f: &Path) -> BuildConstraints {
             ]
             .contains(&&*k)
             {
-                Some((Maintenance::Other(k), v))
+                Maintenance::Other(k)
             } else {
-                Some((Maintenance::Maintainer(Maintainer(k)), v))
-            }
+                Maintenance::Maintainer(Maintainer(k))
+            };
+            (maintainer, v)
         })
         .collect();
     BuildConstraints {
