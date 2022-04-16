@@ -13,13 +13,13 @@ pub fn affected(build_constraints: &Path, a: &Path, b: &Path) {
 }
 
 fn affected_impl(diff: Snapshot, bc: &Path) {
-    let packages = build_constraints::parse(bc).packages;
-    let packages = build_constraints::transpose(packages);
+    let packages = build_constraints::parse(bc).by_package().packages;
     for (package, diff) in diff.packages {
         match diff {
             Diff::Left(v) => {
-                let maintainers = if let Some(maintainers) = packages.get(&package) {
-                    maintainers
+                let maintainers = if let Some(package) = packages.get(&package) {
+                    package
+                        .maintainers
                         .iter()
                         .map(|m| m.0.clone())
                         .collect::<Vec<_>>()

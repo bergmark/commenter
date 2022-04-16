@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-use crate::build_constraints::{self, BCPackage};
+use crate::build_constraints::{self, BCPackage2};
 use crate::latest_version;
 use crate::snapshot::{self, FoundSnapshots, Lts, Nightly, SnapshotYaml};
 use crate::types::{Package, Version};
@@ -36,34 +36,25 @@ pub fn package_info(stackage_snapshots_path: &Path, build_constraints: &Path, pa
         None => eprintln!("Hackage: Could not find package"),
     }
 
-    let bc = build_constraints::parse(build_constraints);
+    let bc = build_constraints::parse(build_constraints).by_package();
 
-    let mut found_in_bc = false;
-    for (
-        BCPackage {
-            package: _,
-            bound,
-            version,
-        },
-        maintainer,
-    ) in bc.package(&package)
+    if let Some(BCPackage2 {
+        bounds,
+        versions,
+        maintainers,
+    }) = bc.package(&package)
     {
-        found_in_bc = true;
-
-        let bound = bound.unwrap_or_else(|| "N/A".to_owned());
-        let version = version.map_or_else(|| "N/A".to_owned(), |v| v.to_string());
-        println!("build-constraints: bound: {bound}");
-        println!("build-constraints: noted version: {version}");
-        println!("build-constraints: maintainer: {maintainer}");
-    }
-    if !found_in_bc {
+        println!("build-constraints: bounds: {bounds:?}");
+        println!("build-constraints: noted versions: {versions:?}");
+        println!("build-constraints: maintainers: {maintainers:?}");
+    } else {
         println!("build-constraints: Could not find package");
     }
 }
 
 struct Res {
     nightly: Option<(Nightly, Version)>,
-    lts: Option<(Lts, Version)>
+    lts: Option<(Lts, Version)>,
 }
 
 fn find_latest_snapshots_with_package(
@@ -94,5 +85,8 @@ fn find_latest_snapshots_with_package(
             break;
         }
     }
-    Ok(Res { nightly: latest_nightly, lts: latest_lts })
+    Ok(Res {
+        nightly: latest_nightly,
+        lts: latest_lts,
+    })
 }

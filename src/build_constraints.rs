@@ -8,7 +8,7 @@ use lazy_regex::regex;
 use serde::{Deserialize, Deserializer};
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
-struct BuildConstraints {
+pub struct BuildConstraintsYaml {
     #[serde(rename = "ghc-version")]
     ghc_version: String,
     packages: BTreeMap<String, Vec<BCPackage>>,
@@ -45,7 +45,7 @@ impl<'de> serde::Deserialize<'de> for BCPackage {
     {
         let s: String = serde::Deserialize::deserialize(deserializer)?;
         let r = regex!(
-            r#"^(?P<package>[\da-zA-z][\da-zA-Z-]*) *(?:(?P<bound>[<>=^]+) *(?P<version>(\d+(?:\.\d+)*)))? *(?:#.+)?"#
+            r#"^(?P<package>[\da-zA-z][\da-zA-Z-]*) *(?:(?P<bound>[<>=^]+) *(?P<version>(\d+(?:\.\d+)*)))? *"#
         );
         let cap = &r.captures(&s).unwrap();
         let package = cap_into_opt(cap, "package").unwrap();
@@ -59,41 +59,79 @@ impl<'de> serde::Deserialize<'de> for BCPackage {
     }
 }
 
-pub fn transpose(m: BTreeMap<Maintainer, Vec<BCPackage>>) -> BTreeMap<Package, Vec<Maintainer>> {
-    let mut res = BTreeMap::new();
-    for (maintainer, packages) in m {
-        for BCPackage { package, .. } in packages {
-            let e = res.entry(package).or_insert_with(Vec::new);
-            e.push(maintainer.clone());
-        }
-    }
-    res
-}
-
-pub struct ParsedBuildConstraints {
+pub struct BuildConstraints {
     pub ghc_version: String,
     pub packages: BTreeMap<Maintainer, Vec<BCPackage>>,
 }
 
-impl ParsedBuildConstraints {
+pub struct BCPackage2 {
+    pub bounds: Vec<String>,
+    pub versions: Vec<Version>,
+    pub maintainers: Vec<Maintainer>,
+}
+
+impl BCPackage2 {
+    fn empty() -> BCPackage2 {
+        BCPackage2 {
+            bounds: vec![],
+            versions: vec![],
+            maintainers: vec![],
+        }
+    }
+    fn append(&mut self, bound: Option<String>, version: Option<Version>, maintainer: Maintainer) {
+        if let Some(bound) = bound {
+            self.bounds.push(bound);
+        }
+        if let Some(version) = version {
+            self.versions.push(version);
+        }
+        self.maintainers.push(maintainer);
+    }
+}
+
+pub struct BuildConstraintsByPackage {
+    pub ghc_version: String,
+    pub packages: BTreeMap<Package, BCPackage2>,
+}
+
+impl BuildConstraintsByPackage {
+    pub fn package(&self, package: &Package) -> Option<&BCPackage2> {
+        self.packages.get(package)
+    }
+}
+
+impl BuildConstraints {
     pub fn maintainers(&self) -> impl Iterator<Item = &Maintainer> {
         self.packages.keys()
     }
 
-    pub fn package(&self, package: &Package) -> Vec<(BCPackage, Maintainer)> {
-        let mut results: Vec<(BCPackage, Maintainer)> = vec![];
-        for (maintainer, packages) in &self.packages {
-            for package in packages.iter().filter(|bc| &bc.package == package) {
-                results.push((package.clone(), maintainer.clone()))
+    pub fn by_package(self) -> BuildConstraintsByPackage {
+        let BuildConstraints {
+            ghc_version,
+            packages,
+        } = self;
+        let mut packages2: BTreeMap<Package, BCPackage2> = BTreeMap::new();
+        for (maintainer, packages) in packages {
+            for BCPackage {
+                package,
+                bound,
+                version,
+            } in packages
+            {
+                let e = packages2.entry(package).or_insert_with(BCPackage2::empty);
+                e.append(bound, version, maintainer.clone());
             }
         }
-        results
+        BuildConstraintsByPackage {
+            ghc_version,
+            packages: packages2,
+        }
     }
 }
 
-pub fn parse(f: &Path) -> ParsedBuildConstraints {
+pub fn parse(f: &Path) -> BuildConstraints {
     use crate::yaml;
-    let BuildConstraints {
+    let BuildConstraintsYaml {
         ghc_version,
         packages,
     } = yaml::yaml_from_file(f)
@@ -119,7 +157,7 @@ pub fn parse(f: &Path) -> ParsedBuildConstraints {
             }
         })
         .collect();
-    ParsedBuildConstraints {
+    BuildConstraints {
         ghc_version,
         packages,
     }
