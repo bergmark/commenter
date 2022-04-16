@@ -1,36 +1,64 @@
-use lazy_regex::Captures;
+use crate::prelude::*;
 
-pub fn cap_into<'a, A: From<&'a str>>(cap: &Captures<'a>, name: &'static str) -> A {
-    cap_into_opt(cap, name).unwrap()
-}
+use regex::{self, Regex};
 
-pub fn cap_into_n<'a, A: From<&'a str>>(cap: &Captures<'a>, n: usize) -> A {
-    cap_into_opt_n(cap, n).unwrap()
-}
+pub struct Captures<'a>(regex::Captures<'a>);
 
-pub fn cap_try_into<'a, A: TryFrom<&'a str>>(cap: &Captures<'a>, name: &'static str) -> A {
-    cap_try_into_opt(cap, name).unwrap()
-}
+impl<'a> Captures<'a> {
+    pub fn new<'b: 'a>(regex: &Regex, s: &'b str) -> Result<Captures<'a>, anyhow::Error> {
+        let c = regex.captures(s).with_context(|| "{r} did not match {s}")?;
+        Ok(Captures(c))
+    }
 
-pub fn cap_try_into_n<'a, A: TryFrom<&'a str>>(cap: &Captures<'a>, n: usize) -> A {
-    cap_try_into_opt_n(cap, n).unwrap()
-}
+    pub fn get<A: From<&'a str>>(&self, n: usize) -> Result<A, anyhow::Error> {
+        self.0
+            .get(n)
+            .with_context(|| format!("Could not find capture group {n}"))
+            .map(|m| m.as_str().into())
+    }
 
-pub fn cap_into_opt<'a, A: From<&'a str>>(cap: &Captures<'a>, name: &'static str) -> Option<A> {
-    cap.name(name).map(|m| m.as_str().into())
-}
+    pub fn try_get<A>(&self, n: usize) -> Result<A, anyhow::Error>
+    where
+        A: TryFrom<&'a str>,
+        A::Error: Send + Sync + std::error::Error,
+    {
+        let value = self
+            .0
+            .get(n)
+            .with_context(|| format!("Could not find capture group {n}"))?;
+        let value = value.as_str();
 
-pub fn cap_into_opt_n<'a, A: From<&'a str>>(cap: &Captures<'a>, n: usize) -> Option<A> {
-    cap.get(n).map(|m| m.as_str().into())
-}
+        match value.try_into() {
+            Err(e) => Err(anyhow!(
+                "Could not parse {value} in capture group {n}, error: {e}"
+            )),
+            Ok(r) => Ok(r),
+        }
+    }
 
-pub fn cap_try_into_opt<'a, A: TryFrom<&'a str>>(
-    cap: &Captures<'a>,
-    name: &'static str,
-) -> Option<A> {
-    cap.name(name).and_then(|m| m.as_str().try_into().ok())
-}
+    pub fn name<A: From<&'a str>>(&self, name: &'static str) -> Result<A, anyhow::Error> {
+        self.0
+            .name(name)
+            .with_context(|| format!("Could not find capture group {name}"))
+            .map(|m| m.as_str().into())
+    }
 
-pub fn cap_try_into_opt_n<'a, A: TryFrom<&'a str>>(cap: &Captures<'a>, n: usize) -> Option<A> {
-    cap.get(n).and_then(|m| m.as_str().try_into().ok())
+    pub fn try_name<A>(&self, name: &'static str) -> Result<A, anyhow::Error>
+    where
+        A: TryFrom<&'a str>,
+        A::Error: Send + Sync + std::error::Error,
+    {
+        let value = self
+            .0
+            .name(name)
+            .with_context(|| format!("Could not find capture group {name}"))?;
+        let value = value.as_str();
+
+        match value.try_into() {
+            Err(e) => Err(anyhow!(
+                "Could not parse {value} in capture group {name}, error: {e}"
+            )),
+            Ok(r) => Ok(r),
+        }
+    }
 }

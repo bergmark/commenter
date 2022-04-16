@@ -5,5 +5,6 @@ pub use std::fmt;
 pub use std::fs;
 pub use std::path::{Path, PathBuf};
 
+pub use anyhow::{anyhow, Context};
 pub use lazy_regex::regex;
 pub use regex::Regex;

@@ -22,14 +22,14 @@ pub fn outdated(build_constraints: &Path) {
     }
     let mut support: BTreeMap<(Package, Version), BTreeSet<(Package, Version)>> = BTreeMap::new();
     for v in all.into_iter() {
-        let caps = regex!("tried ([^ ]+)-([^,-]+),").captures(&v).unwrap();
-        let package: Package = cap_into_n(&caps, 1);
-        let version: Version = cap_try_into_n(&caps, 2);
+        let cap = Captures::new(regex!("tried ([^ ]+)-([^,-]+),"), &v).unwrap();
+        let package: Package = cap.get(1).unwrap();
+        let version: Version = cap.try_get(2).unwrap();
         map.insert(package.clone(), VersionTag::Auto(version.clone()));
 
-        if let Some(caps) = regex!("does not support: ([^ ]+)-([^-]+)").captures(&v) {
-            let dep_package = cap_into_n(&caps, 1);
-            let dep_version = cap_try_into_n(&caps, 2);
+        if let Ok(cap) = Captures::new(regex!("does not support: ([^ ]+)-([^-]+)"), &v) {
+            let dep_package = cap.get(1).unwrap();
+            let dep_version = cap.try_get(2).unwrap();
             let entry = support.entry((dep_package, dep_version)).or_default();
             entry.insert((package, version));
         }

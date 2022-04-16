@@ -2,7 +2,7 @@ use std::io::{self, BufRead};
 
 use crate::handle::{handle, Location};
 use crate::prelude::*;
-use crate::regex::{cap_into, cap_try_into};
+use crate::regex::*;
 use crate::types::{Package, Version, VersionedPackage};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -46,11 +46,13 @@ fn parse_package_with_component(s: &str) -> Option<PackageWithComponent> {
     let package = regex!(
         r#"^- \[ \] (?P<package>[\da-zA-z][\da-zA-Z-]*?)-(?P<version>(\d+(\.\d+)*)) \(.+?Used by: (?P<component>.+)$"#
     );
-    package.captures(s).map(|cap| PackageWithComponent {
-        package: cap_into(&cap, "package"),
-        version: cap_try_into(&cap, "version"),
-        component: cap_into(&cap, "component"),
-    })
+    Captures::new(package, s)
+        .ok()
+        .map(|cap| PackageWithComponent {
+            package: cap.name("package").unwrap(),
+            version: cap.try_name("version").unwrap(),
+            component: cap.name("component").unwrap(),
+        })
 }
 
 #[test]
@@ -69,10 +71,10 @@ fn parse_header_versioned(s: &str) -> Option<Header> {
     let header_versioned = regex!(
         r#"^(?P<package>[\da-zA-z][\da-zA-Z-]*?)-(?P<version>(\d+(\.\d+)*)).+?is out of bounds for:$"#
     );
-    header_versioned.captures(s).map(|cap| {
+    Captures::new(header_versioned, s).ok().map(|cap| {
         Header::Versioned(VersionedPackage {
-            package: cap_into(&cap, "package"),
-            version: cap_try_into(&cap, "version"),
+            package: cap.name("package").unwrap(),
+            version: cap.try_name("version").unwrap(),
         })
     })
 }
@@ -89,9 +91,9 @@ fn test_parse_header_missing() {
 fn parse_header_missing(s: &str) -> Option<Header> {
     let header_missing = regex!(r#"^(?P<package>[\da-zA-z][\da-zA-Z-]*?) .+?depended on by:$"#);
 
-    header_missing
-        .captures(s)
-        .map(|cap| Header::Missing(cap_into(&cap, "package")))
+    Captures::new(header_missing, s)
+        .ok()
+        .map(|cap| Header::Missing(cap.name("package").unwrap()))
 }
 
 type H = HashMap<Header, Vec<(Package, Version, String)>>;

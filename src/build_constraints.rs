@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-use crate::regex::cap_into_opt;
+use crate::regex::*;
 use crate::types::Package;
 use lazy_regex::regex;
 use serde::{Deserialize, Deserializer};
@@ -55,9 +55,9 @@ pub struct BCPackage {
 impl BCPackage {
     fn parse(s: &str) -> Result<BCPackage, anyhow::Error> {
         let r = regex!(r#"^(?P<package>[\da-zA-z][\da-zA-Z-]*) *(?:(?P<bound>.+?))? *$"#);
-        let cap = &r.captures(s).unwrap();
-        let package = cap_into_opt(cap, "package").unwrap();
-        let bound = cap_into_opt(cap, "bound");
+        let cap = Captures::new(r, s)?;
+        let package = cap.name("package")?;
+        let bound = cap.name("bound").ok();
         Ok(BCPackage { package, bound })
     }
 }

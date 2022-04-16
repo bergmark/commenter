@@ -127,13 +127,13 @@ where
 }
 
 fn parse_versioned_package_yaml(s: &str) -> Option<VersionedPackage> {
-    if let Some(caps) = regex!(r#"- *([^ ]+) < *0 *# *([\d.]+)"#).captures(s) {
-        let package = cap_into_n(&caps, 1);
-        let version = cap_try_into_n(&caps, 2);
+    if let Ok(cap) = Captures::new(regex!(r#"- *([^ ]+) < *0 *# *([\d.]+)"#), s) {
+        let package = cap.get(1).unwrap();
+        let version = cap.try_get(2).unwrap();
         Some(VersionedPackage { package, version })
-    } else if let Some(caps) = regex!(r#"- *([^ ]+) *# *([\d.]+)"#).captures(s) {
-        let package = cap_into_n(&caps, 1);
-        let version = cap_try_into_n(&caps, 2);
+    } else if let Ok(cap) = Captures::new(regex!(r#"- *([^ ]+) *# *([\d.]+)"#), s) {
+        let package = cap.get(1).unwrap();
+        let version = cap.try_get(2).unwrap();
         Some(VersionedPackage { package, version })
     } else {
         None
@@ -142,12 +142,11 @@ fn parse_versioned_package_yaml(s: &str) -> Option<VersionedPackage> {
 
 fn parse_disabled_package(s: &str) -> Option<DisabledPackage> {
     if !regex!(r#"- *([^ ]+) < *0 *# tried"#).is_match(s) {
-        if let Some(caps) = regex!(r#"- *([^ ]+) < *0 *# *\d*[^\d ]"#).captures(s) {
-            let package = cap_into_n(&caps, 1);
-            Some(DisabledPackage { package })
-        } else {
-            None
-        }
+        Captures::new(regex!(r#"- *([^ ]+) < *0 *# *\d*[^\d ]"#), s)
+            .ok()
+            .map(|cap| DisabledPackage {
+                package: cap.get(1).unwrap(),
+            })
     } else {
         None
     }

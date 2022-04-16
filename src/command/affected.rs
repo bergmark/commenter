@@ -63,11 +63,11 @@ mod test {
         let r = regex!(
             r#"^(?P<symbol>[+-^~]) (?P<package>.+?)-(?P<version>[.\d]+)(?: -> (?P<new_version>[.\d]+))?$"#
         );
-        let caps = r.captures(line).unwrap_or_else(|| panic!("{}", line));
-        let c: String = cap_into(&caps, "symbol");
-        let package: Package = cap_into(&caps, "package");
-        let version: Version = cap_try_into(&caps, "version");
-        let new_version: Option<Version> = cap_try_into_opt(&caps, "new_version");
+        let cap = Captures::new(r, line).unwrap();
+        let c: String = cap.name("symbol").unwrap();
+        let package: Package = cap.name("package").unwrap();
+        let version: Version = cap.try_name("version").unwrap();
+        let new_version: Option<Version> = cap.try_name("new_version").ok();
         (c, package, version, new_version)
     }
 

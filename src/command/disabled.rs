@@ -70,17 +70,15 @@ fn parse_disabled_transitviely(s: &str) -> Option<DisabledTransitively> {
     let r = regex!(
         r#"- *([^ ]+) < *0 *# tried [^ ]+-([\d.]+), but its \*[^*]+\* requires the disabled package: ([^ ]+)"#
     );
-    if let Some(caps) = r.captures(s) {
-        let package = cap_into_n(&caps, 1);
-        let version = cap_try_into_n(&caps, 2);
-        let parent = cap_into_n(&caps, 3);
-        Some(DisabledTransitively {
+    Captures::new(r, s).ok().map(|cap| {
+        let package = cap.get(1).unwrap();
+        let version = cap.try_get(2).unwrap();
+        let parent = cap.try_get(3).unwrap();
+        DisabledTransitively {
             child: VersionedPackage { package, version },
             parent,
-        })
-    } else {
-        None
-    }
+        }
+    })
 }
 
 #[test]

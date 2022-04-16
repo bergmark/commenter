@@ -29,9 +29,9 @@ impl<'de> serde::Deserialize<'de> for PackageWithVersionAndSha {
     {
         let s: String = String::deserialize(deserializer)?;
         let r = regex!(r#"^(.+?)-([.\d]+)@sha256:[\da-z]+,\d+$"#);
-        if let Some(caps) = r.captures(&s) {
-            let package = cap_into_n(&caps, 1);
-            let version = cap_try_into_n(&caps, 2);
+        if let Ok(cap) = Captures::new(r, &s) {
+            let package = cap.get(1).unwrap();
+            let version = cap.try_get(2).unwrap();
             Ok(Self(VersionedPackage { package, version }))
         } else {
             Err(serde::de::Error::invalid_value(
