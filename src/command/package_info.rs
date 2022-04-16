@@ -40,12 +40,10 @@ pub fn package_info(stackage_snapshots_path: &Path, build_constraints: &Path, pa
 
     if let Some(BCPackage2 {
         bounds,
-        versions,
         maintainers,
     }) = bc.package(&package)
     {
         println!("build-constraints: bounds: {bounds:?}");
-        println!("build-constraints: noted versions: {versions:?}");
         println!("build-constraints: maintainers: {maintainers:?}");
     } else {
         println!("build-constraints: Could not find package");

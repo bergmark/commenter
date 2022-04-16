@@ -21,7 +21,7 @@ fn affected_impl(diff: Snapshot, bc: &Path) {
                     package
                         .maintainers
                         .iter()
-                        .map(|m| m.0.clone())
+                        .map(|m| m.to_string())
                         .collect::<Vec<_>>()
                         .join(", ")
                 } else {

@@ -1,17 +1,32 @@
 use crate::prelude::*;
 
-use std::fmt;
-
-use crate::regex::{cap_into_opt, cap_try_into_opt};
-use crate::types::{Package, Version};
+use crate::regex::cap_into_opt;
+use crate::types::Package;
 use lazy_regex::regex;
 use serde::{Deserialize, Deserializer};
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-pub struct BuildConstraintsYaml {
-    #[serde(rename = "ghc-version")]
-    ghc_version: String,
-    packages: BTreeMap<String, Vec<BCPackage>>,
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Maintenance {
+    Maintainer(Maintainer),
+    Other(String),
+}
+
+impl Maintenance {
+    pub fn maintainer(&self) -> Option<&Maintainer> {
+        match self {
+            Maintenance::Maintainer(m) => Some(m),
+            Maintenance::Other(_) => None,
+        }
+    }
+}
+
+impl fmt::Display for Maintenance {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Maintenance::Maintainer(m) => m.fmt(f),
+            Maintenance::Other(o) => o.fmt(f),
+        }
+    }
 }
 
 #[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Clone)]
@@ -19,7 +34,7 @@ pub struct Maintainer(pub String);
 
 impl fmt::Display for Maintainer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+        self.0.fmt(f)
     }
 }
 
@@ -35,7 +50,37 @@ impl Maintainer {
 pub struct BCPackage {
     pub package: Package,
     pub bound: Option<String>,
-    pub version: Option<Version>,
+}
+
+impl BCPackage {
+    fn parse(s: &str) -> Result<BCPackage, anyhow::Error> {
+        let r = regex!(r#"^(?P<package>[\da-zA-z][\da-zA-Z-]*) *(?:(?P<bound>.+?))? *$"#);
+        let cap = &r.captures(&s).unwrap();
+        let package = cap_into_opt(cap, "package").unwrap();
+        let bound = cap_into_opt(cap, "bound");
+        Ok(BCPackage { package, bound })
+    }
+}
+
+#[test]
+fn test_parse_bc_package() {
+    fn t(s: &str, package: &str, bound: Option<&str>) {
+        assert_eq!(
+            BCPackage::parse(s).map_err(|e| e.to_string()),
+            Ok(BCPackage {
+                package: package.into(),
+                bound: bound.map(|b| b.to_owned())
+            })
+        );
+    }
+
+    t("cleff", "cleff", None);
+    t("gitlab-haskell < 0", "gitlab-haskell", Some("< 0"));
+    t(
+        "alex < 3.2.7 || > 3.2.7",
+        "alex",
+        Some("< 3.2.7 || > 3.2.7"),
+    );
 }
 
 impl<'de> serde::Deserialize<'de> for BCPackage {
@@ -44,46 +89,30 @@ impl<'de> serde::Deserialize<'de> for BCPackage {
         D: Deserializer<'de>,
     {
         let s: String = serde::Deserialize::deserialize(deserializer)?;
-        let r = regex!(
-            r#"^(?P<package>[\da-zA-z][\da-zA-Z-]*) *(?:(?P<bound>[<>=^]+) *(?P<version>(\d+(?:\.\d+)*)))? *"#
-        );
-        let cap = &r.captures(&s).unwrap();
-        let package = cap_into_opt(cap, "package").unwrap();
-        let bound = cap_into_opt(cap, "bound");
-        let version = cap_try_into_opt(cap, "version");
-        Ok(BCPackage {
-            package,
-            bound,
-            version,
-        })
+        BCPackage::parse(&s).map_err(|e| serde::de::Error::custom(e.to_string()))
     }
 }
 
 pub struct BuildConstraints {
     pub ghc_version: String,
-    pub packages: BTreeMap<Maintainer, Vec<BCPackage>>,
+    pub packages: BTreeMap<Maintenance, Vec<BCPackage>>,
 }
 
 pub struct BCPackage2 {
     pub bounds: Vec<String>,
-    pub versions: Vec<Version>,
-    pub maintainers: Vec<Maintainer>,
+    pub maintainers: Vec<Maintenance>,
 }
 
 impl BCPackage2 {
     fn empty() -> BCPackage2 {
         BCPackage2 {
             bounds: vec![],
-            versions: vec![],
             maintainers: vec![],
         }
     }
-    fn append(&mut self, bound: Option<String>, version: Option<Version>, maintainer: Maintainer) {
+    fn append(&mut self, bound: Option<String>, maintainer: Maintenance) {
         if let Some(bound) = bound {
             self.bounds.push(bound);
-        }
-        if let Some(version) = version {
-            self.versions.push(version);
         }
         self.maintainers.push(maintainer);
     }
@@ -101,7 +130,7 @@ impl BuildConstraintsByPackage {
 }
 
 impl BuildConstraints {
-    pub fn maintainers(&self) -> impl Iterator<Item = &Maintainer> {
+    pub fn maintainers(&self) -> impl Iterator<Item = &Maintenance> {
         self.packages.keys()
     }
 
@@ -112,14 +141,11 @@ impl BuildConstraints {
         } = self;
         let mut packages2: BTreeMap<Package, BCPackage2> = BTreeMap::new();
         for (maintainer, packages) in packages {
-            for BCPackage {
-                package,
-                bound,
-                version,
-            } in packages
-            {
-                let e = packages2.entry(package).or_insert_with(BCPackage2::empty);
-                e.append(bound, version, maintainer.clone());
+            for BCPackage { package, bound } in packages {
+                packages2
+                    .entry(package)
+                    .or_insert_with(BCPackage2::empty)
+                    .append(bound, maintainer.clone());
             }
         }
         BuildConstraintsByPackage {
@@ -131,6 +157,14 @@ impl BuildConstraints {
 
 pub fn parse(f: &Path) -> BuildConstraints {
     use crate::yaml;
+
+    #[derive(Deserialize, Debug, PartialEq, Eq)]
+    pub struct BuildConstraintsYaml {
+        #[serde(rename = "ghc-version")]
+        ghc_version: String,
+        packages: BTreeMap<String, Vec<BCPackage>>,
+    }
+
     let BuildConstraintsYaml {
         ghc_version,
         packages,
@@ -151,9 +185,9 @@ pub fn parse(f: &Path) -> BuildConstraints {
             ]
             .contains(&&*k)
             {
-                None
+                Some((Maintenance::Other(k), v))
             } else {
-                Some((Maintainer(k), v))
+                Some((Maintenance::Maintainer(Maintainer(k)), v))
             }
         })
         .collect();
