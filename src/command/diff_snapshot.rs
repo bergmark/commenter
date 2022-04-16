@@ -1,7 +1,9 @@
+use crate::prelude::*;
+
 use crate::snapshot::{to_diff, Diff};
 use crate::yaml;
 
-pub fn diff_snapshot(a: String, b: String) {
+pub fn diff_snapshot(a: &Path, b: &Path) {
     let diff = to_diff(
         yaml::yaml_from_file(a).unwrap(),
         yaml::yaml_from_file(b).unwrap(),

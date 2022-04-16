@@ -81,3 +81,85 @@ pub fn to_diff(a: SnapshotYaml, b: SnapshotYaml) -> Snapshot {
 
     Snapshot { packages }
 }
+
+#[derive(Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
+pub struct Nightly {
+    pub year: usize,
+    pub month: usize,
+    pub day: usize,
+}
+
+impl fmt::Display for Nightly {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Self { year, month, day } = self;
+        write!(f, "nightly-{year}-{month:02}-{day:02}")
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
+pub struct Lts {
+    pub major: usize,
+    pub minor: usize,
+}
+
+impl fmt::Display for Lts {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let Self { major, minor } = self;
+        write!(f, "lts-{major}.{minor}")
+    }
+}
+
+pub struct FoundSnapshots {
+    pub nightly: Vec<(Nightly, PathBuf)>,
+    pub lts: Vec<(Lts, PathBuf)>,
+}
+
+pub fn find_snapshots(stackage_snapshots_path: &Path) -> Result<FoundSnapshots, anyhow::Error> {
+    let mut nightly: Vec<(Nightly, PathBuf)> = vec![];
+    let mut lts: Vec<(Lts, PathBuf)> = vec![];
+    let mut dirs: BTreeSet<PathBuf> = BTreeSet::from([stackage_snapshots_path.into()]);
+    let mut dirs_len = dirs.len();
+    while dirs_len >= 1 {
+        let mut new_dirs = BTreeSet::new();
+        for current_dir in dirs {
+            if current_dir.ends_with(".git") {
+                continue;
+            }
+
+            for entry in fs::read_dir(current_dir).unwrap() {
+                let entry = entry.unwrap();
+                let path = entry.path();
+                let metadata = fs::metadata(&path).unwrap();
+                let file_type = metadata.file_type();
+
+                if file_type.is_dir() {
+                    new_dirs.insert(path);
+                } else if path.extension() == Some(OsStr::new("yaml")) {
+                    let path_str = path.to_str().unwrap();
+                    if let Some(caps) =
+                        regex!(r#"/nightly/(\d+)/(\d+)/(\d+).yaml$"#).captures(path_str)
+                    {
+                        let n = Nightly {
+                            year: caps[1].parse().unwrap(),
+                            month: caps[2].parse().unwrap(),
+                            day: caps[3].parse().unwrap(),
+                        };
+                        nightly.push((n, path));
+                    } else if let Some(caps) =
+                        regex!(r#"/lts/(\d+)/(\d+).yaml$"#).captures(path_str)
+                    {
+                        let n = Lts {
+                            major: caps[1].parse().unwrap(),
+                            minor: caps[2].parse().unwrap(),
+                        };
+                        lts.push((n, path));
+                    }
+                }
+            }
+        }
+        dirs = new_dirs;
+        dirs_len = dirs.len();
+    }
+
+    Ok(FoundSnapshots { nightly, lts })
+}

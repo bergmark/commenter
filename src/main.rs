@@ -23,16 +23,16 @@ enum Opt {
     Affected {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
-        older: String,
-        newer: String,
+        older: PathBuf,
+        newer: PathBuf,
     },
     Clear {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
     },
     DiffSnapshot {
-        older: String,
-        newer: String,
+        older: PathBuf,
+        newer: PathBuf,
     },
     Disabled {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
@@ -50,6 +50,13 @@ enum Opt {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
     },
+    PackageInfo {
+        #[structopt(short, long, default_value = "../stackage-snapshots")]
+        stackage_snapshots_path: PathBuf,
+        #[structopt(short, long, default_value = "build-constraints.yaml")]
+        build_constraints: PathBuf,
+        package: String,
+    },
 }
 
 fn main() {
@@ -64,14 +71,23 @@ fn main() {
             build_constraints,
             older,
             newer,
-        } => command::affected::affected(&build_constraints, older, newer),
+        } => command::affected::affected(&build_constraints, &older, &newer),
         Opt::Clear { build_constraints } => command::clear(&build_constraints),
-        Opt::DiffSnapshot { older, newer } => command::diff_snapshot::diff_snapshot(older, newer),
+        Opt::DiffSnapshot { older, newer } => command::diff_snapshot::diff_snapshot(&older, &newer),
         Opt::Disabled { build_constraints } => command::disabled::disabled(&build_constraints),
         Opt::Maintainers { build_constraints } => {
             command::maintainers::maintainers(&build_constraints)
         }
         Opt::Multiple { build_constraints } => command::multiple::multiple(&build_constraints),
         Opt::Outdated { build_constraints } => command::outdated::outdated(&build_constraints),
+        Opt::PackageInfo {
+            stackage_snapshots_path,
+            build_constraints,
+            package,
+        } => command::package_info::package_info(
+            &stackage_snapshots_path,
+            &build_constraints,
+            &package,
+        ),
     }
 }

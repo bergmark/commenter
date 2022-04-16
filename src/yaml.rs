@@ -1,12 +1,10 @@
-use std::error::Error;
+use crate::prelude::*;
+
+use serde::Deserialize;
 use std::fs::File;
 use std::io::BufReader;
 
-use serde::Deserialize;
-
-use crate::prelude::*;
-
-pub fn yaml_from_file<A, P: AsRef<Path>>(path: P) -> Result<A, Box<dyn Error>>
+pub fn yaml_from_file<A>(path: &Path) -> Result<A, anyhow::Error>
 where
     A: for<'de> Deserialize<'de>,
 {

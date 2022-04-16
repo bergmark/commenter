@@ -43,7 +43,7 @@ pub fn outdated(build_constraints: &Path) {
                 .map(|((package, _), _)| package.clone())
                 .collect(),
         );
-        latest_version(packages.into_iter())
+        latest_version(packages.iter())
     };
 
     for (package, version) in map {

@@ -4,7 +4,9 @@ use rusqlite::Connection;
 
 use crate::types::*;
 
-pub fn latest_version(packages: impl Iterator<Item = Package>) -> BTreeMap<Package, Version> {
+pub fn latest_version<'a>(
+    packages: impl Iterator<Item = &'a Package>,
+) -> BTreeMap<Package, Version> {
     let all_versions = all_versions(packages);
     all_versions
         .into_iter()
@@ -12,7 +14,13 @@ pub fn latest_version(packages: impl Iterator<Item = Package>) -> BTreeMap<Packa
         .collect()
 }
 
-fn all_versions(packages: impl Iterator<Item = Package>) -> BTreeMap<Package, BTreeSet<Version>> {
+pub fn latest_version_for(package: &Package) -> Option<Version> {
+    latest_version([package].into_iter()).get(package).cloned()
+}
+
+fn all_versions<'a>(
+    packages: impl Iterator<Item = &'a Package>,
+) -> BTreeMap<Package, BTreeSet<Version>> {
     let tilde = home::home_dir().unwrap_or_else(|| panic!("Could not find $HOME"));
     let mut res = BTreeMap::new();
     let conn = Connection::open(format!(

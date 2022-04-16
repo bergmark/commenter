@@ -4,7 +4,7 @@ use crate::build_constraints;
 use crate::snapshot::{self, Diff, Snapshot};
 use crate::yaml;
 
-pub fn affected(build_constraints: &Path, a: String, b: String) {
+pub fn affected(build_constraints: &Path, a: &Path, b: &Path) {
     let diff = snapshot::to_diff(
         yaml::yaml_from_file(a).unwrap(),
         yaml::yaml_from_file(b).unwrap(),

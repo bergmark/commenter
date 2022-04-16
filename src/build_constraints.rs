@@ -79,6 +79,16 @@ impl ParsedBuildConstraints {
     pub fn maintainers(&self) -> impl Iterator<Item = &Maintainer> {
         self.packages.keys()
     }
+
+    pub fn package(&self, package: &Package) -> Vec<(BCPackage, Maintainer)> {
+        let mut results: Vec<(BCPackage, Maintainer)> = vec![];
+        for (maintainer, packages) in &self.packages {
+            for package in packages.iter().filter(|bc| &bc.package == package) {
+                results.push((package.clone(), maintainer.clone()))
+            }
+        }
+        results
+    }
 }
 
 pub fn parse(f: &Path) -> ParsedBuildConstraints {
@@ -117,5 +127,5 @@ pub fn parse(f: &Path) -> ParsedBuildConstraints {
 
 #[test]
 fn test_parse_build_constraints() {
-    let _ = parse(&PathBuf::from("test/build-constraints.yaml"));
+    parse(&PathBuf::from("test/build-constraints.yaml"));
 }

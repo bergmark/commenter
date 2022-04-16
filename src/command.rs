@@ -8,6 +8,7 @@ pub mod disabled;
 pub mod maintainers;
 pub mod multiple;
 pub mod outdated;
+pub mod package_info;
 
 use crate::handle::{handle, Location};
 
