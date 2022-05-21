@@ -1,3 +1,8 @@
+## 0.4.0
+* Add `package-info` command
+* Add restrictive bounds info to bounds failures added by `add` and `add-loop`
+* `latest-version` is no longer a separate binary, so no need to install it anymore.
+
 ## 0.3.0
 
 * Add release binaries

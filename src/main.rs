@@ -42,10 +42,7 @@ enum Opt {
     },
     /// Produces a diff between two snapshots, showing added, removed,
     /// and up/down-graded packages.
-    DiffSnapshot {
-        older: PathBuf,
-        newer: PathBuf,
-    },
+    DiffSnapshot { older: PathBuf, newer: PathBuf },
     /// Print the number of reverse dependencies that are blocked by disabled packages
     Disabled {
         #[structopt(short, long, default_value = "build-constraints.yaml")]

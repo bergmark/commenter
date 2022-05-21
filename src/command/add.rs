@@ -46,7 +46,6 @@ fn test_parse_package_with_component() {
             component: "library".into(),
         }
     );
-
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
