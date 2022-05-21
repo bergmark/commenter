@@ -19,6 +19,7 @@ fn test_parse_package_with_component() {
         PackageWithComponent {
             package: "captcha-2captcha".into(),
             version: "0.1.0.0".try_into().unwrap(),
+            bound: "==0.1.*".into(),
             component: "library".into(),
         }
     );
@@ -30,27 +31,57 @@ fn test_parse_package_with_component() {
         PackageWithComponent {
             package: "b9".into(),
             version: "3.2.0".try_into().unwrap(),
+            bound: "==1.4.*".into(),
             component: "library".into(),
         }
     );
+
+    let line = "- [ ] BlastHTTP-1.4.2 (==0.3.3.*). Ketil Malde @ketil-malde. Used by: library";
+    assert_eq!(
+        parse_package_with_component(line).unwrap(),
+        PackageWithComponent {
+            package: "BlastHTTP".into(),
+            version: "1.4.2".try_into().unwrap(),
+            bound: "==0.3.3.*".into(),
+            component: "library".into(),
+        }
+    );
+
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+struct Bound(String);
+
+impl From<&str> for Bound {
+    fn from(s: &str) -> Bound {
+        Bound(s.to_owned())
+    }
+}
+
+impl fmt::Display for Bound {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
 struct PackageWithComponent {
     package: Package,
     version: Version,
+    bound: Bound,
     component: String,
 }
 
 fn parse_package_with_component(s: &str) -> Option<PackageWithComponent> {
     let package = regex!(
-        r#"^- \[ \] (?P<package>[\da-zA-z][\da-zA-Z-]*?)-(?P<version>(\d+(\.\d+)*)) \(.+?Used by: (?P<component>.+)$"#
+        r#"^- \[ \] (?P<package>[\da-zA-z][\da-zA-Z-]*?)-(?P<version>(\d+(\.\d+)*)) \((?P<bound>[^)]+)\).+?Used by: (?P<component>.+)$"#
     );
     Captures::new(package, s)
         .ok()
         .map(|cap| PackageWithComponent {
             package: cap.name("package").unwrap(),
             version: cap.try_name("version").unwrap(),
+            bound: cap.try_name("bound").unwrap(),
             component: cap.name("component").unwrap(),
         })
 }
@@ -96,7 +127,7 @@ fn parse_header_missing(s: &str) -> Option<Header> {
         .map(|cap| Header::Missing(cap.name("package").unwrap()))
 }
 
-type H = HashMap<Header, Vec<(Package, Version, String)>>;
+type H = HashMap<Header, Vec<(Package, Version, Bound, String)>>;
 
 pub fn add(build_constraints: &Path) {
     add_impl(build_constraints, || {
@@ -123,16 +154,17 @@ pub fn add_impl(build_constraints: &Path, lines: impl FnOnce() -> Vec<String>) -
         } else if let Some(PackageWithComponent {
             package,
             version,
+            bound,
             component,
         }) = parse_package_with_component(&line)
         {
             let root = last_header.clone().unwrap();
             match &*component {
                 "library" | "executable" => {
-                    insert(&mut lib_exes, root, &package, &version, &component)
+                    insert(&mut lib_exes, root, &package, &version, &bound, &component)
                 }
-                "benchmark" => insert(&mut benches, root, &package, &version, "benchmarks"),
-                "test-suite" => insert(&mut tests, root, &package, &version, &component),
+                "benchmark" => insert(&mut benches, root, &package, &version, &bound, "benchmarks"),
+                "test-suite" => insert(&mut tests, root, &package, &version, &bound, &component),
                 _ => panic!("Bad component: {component}"),
             }
         } else if let Some(header_versioned) = parse_header_versioned(&line) {
@@ -140,7 +172,7 @@ pub fn add_impl(build_constraints: &Path, lines: impl FnOnce() -> Vec<String>) -
         } else if let Some(missing) = parse_header_missing(&line) {
             last_header = Some(missing);
         } else {
-            panic!("Unhandled: {}", line);
+            panic!("Unhandled: {line:?}");
         }
     }
 
@@ -152,8 +184,10 @@ pub fn add_impl(build_constraints: &Path, lines: impl FnOnce() -> Vec<String>) -
         println!("\nLIBS + EXES\n");
     }
     for (header, packages) in lib_exes {
-        for (package, version, component) in packages {
-            let s = printer("        ", &package, true, &version, &component, &header);
+        for (package, version, bound, component) in packages {
+            let s = printer(
+                "        ", &package, true, &version, &bound, &component, &header,
+            );
             println!("{s}");
             auto_lib_exes.push(s);
         }
@@ -163,8 +197,10 @@ pub fn add_impl(build_constraints: &Path, lines: impl FnOnce() -> Vec<String>) -
         println!("\nTESTS\n");
     }
     for (header, packages) in tests {
-        for (package, version, component) in packages {
-            let s = printer("    ", &package, false, &version, &component, &header);
+        for (package, version, bound, component) in packages {
+            let s = printer(
+                "    ", &package, false, &version, &bound, &component, &header,
+            );
             println!("{s}");
             auto_tests.push(s);
         }
@@ -174,8 +210,10 @@ pub fn add_impl(build_constraints: &Path, lines: impl FnOnce() -> Vec<String>) -
         println!("\nBENCHMARKS\n");
     }
     for (header, packages) in benches {
-        for (package, version, component) in packages {
-            let s = printer("    ", &package, false, &version, &component, &header);
+        for (package, version, bound, component) in packages {
+            let s = printer(
+                "    ", &package, false, &version, &bound, &component, &header,
+            );
             println!("{s}");
             auto_benches.push(s);
         }
@@ -200,6 +238,7 @@ fn printer(
     package: &Package,
     lt0: bool,
     version: &Version,
+    bound: &Bound,
     component: &str,
     header: &Header,
 ) -> String {
@@ -207,16 +246,27 @@ fn printer(
     format!(
         "{indent}- {package}{lt0} # tried {package}-{version}, but its *{component}* {cause}",
         cause = match header {
-            Header::Versioned(versioned) => format!("does not support: {versioned}"),
+            Header::Versioned(versioned) => format!(
+                "requires {package} {bound}, but the snapshot contains {versioned}",
+                package = versioned.package
+            ),
             Header::Missing(package) => format!("requires the disabled package: {package}"),
         },
     )
 }
 
-fn insert(h: &mut H, header: Header, package: &Package, version: &Version, component: &str) {
+fn insert(
+    h: &mut H,
+    header: Header,
+    package: &Package,
+    version: &Version,
+    bound: &Bound,
+    component: &str,
+) {
     (*h.entry(header).or_insert_with(Vec::new)).push((
         package.clone(),
         version.clone(),
+        bound.clone(),
         component.to_owned(),
     ));
 }
