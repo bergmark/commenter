@@ -127,6 +127,7 @@ fn is_boot(package: &Package) -> bool {
         "ghci",
         "ghc-lib-parser", // not a boot lib, but tied to the GHC version.
         "integer-gmp",
+        "parsec",
         "process",
         "stm",
         "template-haskell",
