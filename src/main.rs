@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
-use structopt::StructOpt;
+use clap::Parser;
 
 use commenter::command;
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 #[structopt(
     name = "commenter",
     about = "Automates generation of bounds in  build-constraints.yaml"
@@ -76,7 +76,7 @@ enum Opt {
 }
 
 fn main() {
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
     match opt {
         Opt::Add { build_constraints } => command::add::add(&build_constraints),
         Opt::AddLoop {
