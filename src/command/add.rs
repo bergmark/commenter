@@ -246,7 +246,7 @@ fn printer(
         "{indent}- {package}{lt0} # tried {package}-{version}, but its *{component}* {cause}",
         cause = match header {
             Header::Versioned(versioned) => format!(
-                "requires {package} {bound}, but the snapshot contains {versioned}",
+                "requires {package} {bound} and the snapshot contains {versioned}",
                 package = versioned.package
             ),
             Header::Missing(package) => format!("requires the disabled package: {package}"),
