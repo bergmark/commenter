@@ -1,3 +1,6 @@
+### 0.4.1
+* `add`: Tweak bound messages
+
 ## 0.4.0
 * Add `package-info` command
 * Add restrictive bounds info to bounds failures added by `add` and `add-loop`
