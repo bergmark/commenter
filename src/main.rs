@@ -48,6 +48,11 @@ enum Opt {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
     },
+    /// Prints packages that are mentioned in comments but not elsewhere
+    NotPresent {
+        #[structopt(short, long, default_value = "build-constraints.yaml")]
+        build_constraints: PathBuf,
+    },
     /// Prints maintainer sections with missing github handles
     Maintainers {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
@@ -95,6 +100,9 @@ fn main() {
             command::maintainers::maintainers(&build_constraints)
         }
         Opt::Multiple { build_constraints } => command::multiple::multiple(&build_constraints),
+        Opt::NotPresent { build_constraints } => {
+            command::not_present::not_present(&build_constraints)
+        }
         Opt::Outdated { build_constraints } => command::outdated::outdated(&build_constraints),
         Opt::PackageInfo {
             stackage_snapshots_path,

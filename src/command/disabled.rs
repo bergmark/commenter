@@ -4,7 +4,7 @@ use crate::handle::{handle, Location};
 use crate::regex::*;
 use crate::types::*;
 
-type M = BTreeMap<Package, (Vec<VersionedPackage>, Option<usize>)>;
+pub(crate) type M = BTreeMap<Package, (Vec<VersionedPackage>, Option<usize>)>;
 
 pub fn disabled(build_constraints: &Path) {
     let mut disabled_transitively: Vec<DisabledTransitively> = vec![];
@@ -61,12 +61,12 @@ pub fn disabled(build_constraints: &Path) {
 }
 
 #[derive(PartialEq, Eq, Debug)]
-struct DisabledTransitively {
-    child: VersionedPackage,
-    parent: Package,
+pub(crate) struct DisabledTransitively {
+    pub(crate) child: VersionedPackage,
+    pub(crate) parent: Package,
 }
 
-fn parse_disabled_transitviely(s: &str) -> Option<DisabledTransitively> {
+pub(crate) fn parse_disabled_transitviely(s: &str) -> Option<DisabledTransitively> {
     let r = regex!(
         r#"- *([^ ]+) < *0 *# tried [^ ]+-([\d.]+), but its \*[^*]+\* requires the disabled package: ([^ ]+)"#
     );

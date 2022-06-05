@@ -7,6 +7,7 @@ pub mod diff_snapshot;
 pub mod disabled;
 pub mod maintainers;
 pub mod multiple;
+pub mod not_present;
 pub mod outdated;
 pub mod package_info;
 

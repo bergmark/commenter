@@ -18,6 +18,14 @@ impl Maintenance {
             Maintenance::Other(_) => None,
         }
     }
+
+    #[allow(unused)]
+    pub fn other(&self) -> Option<&String> {
+        match self {
+            Maintenance::Maintainer(_) => None,
+            Maintenance::Other(o) => Some(o),
+        }
+    }
 }
 
 impl fmt::Display for Maintenance {

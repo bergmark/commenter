@@ -7,7 +7,7 @@ use crate::regex::*;
 use crate::types::*;
 
 pub struct DisabledPackage {
-    pub package: String,
+    pub package: Package,
 }
 
 pub fn handle<F>(
@@ -102,6 +102,7 @@ where
     (versioned_packages, disabled_packages)
 }
 
+#[derive(Debug, Copy, Clone)]
 enum State {
     LookingForLibBounds,
     ProcessingLibBounds,
@@ -112,6 +113,7 @@ enum State {
     Done,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub enum Location {
     Lib,
     Test,
@@ -120,9 +122,11 @@ pub enum Location {
 
 fn read_lines<P>(filename: P) -> Lines<BufReader<File>>
 where
-    P: AsRef<Path>,
+    P: AsRef<Path> + fmt::Debug + Clone,
 {
-    let file = File::open(filename).unwrap();
+    let filen = filename.clone();
+    let file =
+        File::open(filename).unwrap_or_else(|e| panic!("Could not open {filen:?}, error: {e}"));
     BufReader::new(file).lines()
 }
 
