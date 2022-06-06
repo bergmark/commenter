@@ -1,3 +1,6 @@
+### 0.4.2 (not released)
+* `grandfather`: New command to add mentioned packages that ar not maintained to Grandfathered Dependencies.
+
 ### 0.4.1
 * `add`: Tweak bound messages
 

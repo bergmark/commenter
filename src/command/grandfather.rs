@@ -3,7 +3,7 @@ use crate::prelude::*;
 use crate::command::disabled::{self, DisabledTransitively, M};
 use crate::handle::{self, Location};
 
-pub fn not_present(build_constraints: &Path) {
+pub fn grandfather(build_constraints: &Path) {
     let mut disabled_transitively: Vec<DisabledTransitively> = vec![];
     handle::handle(build_constraints, false, |loc, lines| {
         match loc {
@@ -35,10 +35,6 @@ pub fn not_present(build_constraints: &Path) {
             continue;
         }
         if bc.package(&parent).is_none() {
-            // let children = children.iter().map(|c| c.package.clone()).join(", ");
-            // println!("{parent} (not present) transitively disables: {children}");
-
-            // So this can be pasted into build-constraints.yaml
             println!("        - {parent}");
         }
     }
