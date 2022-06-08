@@ -42,7 +42,12 @@ enum Opt {
     },
     /// Produces a diff between two snapshots, showing added, removed,
     /// and up/down-graded packages.
-    DiffSnapshot { older: PathBuf, newer: PathBuf },
+    DiffSnapshot {
+        older: PathBuf,
+        newer: PathBuf,
+        #[structopt(long, default_value = "text")]
+        mode: crate::command::diff_snapshot::Mode,
+    },
     /// Print the number of reverse dependencies that are blocked by disabled packages
     Disabled {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
@@ -96,7 +101,9 @@ fn main() {
             newer,
         } => command::affected::affected(&build_constraints, &older, &newer),
         Opt::Clear { build_constraints } => command::clear(&build_constraints),
-        Opt::DiffSnapshot { older, newer } => command::diff_snapshot::diff_snapshot(&older, &newer),
+        Opt::DiffSnapshot { older, newer, mode } => {
+            command::diff_snapshot::diff_snapshot(&older, &newer, mode)
+        }
         Opt::Disabled { build_constraints } => command::disabled::disabled(&build_constraints),
         Opt::Grandfather { build_constraints } => {
             command::grandfather::grandfather(&build_constraints)
