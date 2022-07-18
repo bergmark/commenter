@@ -11,7 +11,13 @@ impl fmt::Display for Package {
 
 impl From<&str> for Package {
     fn from(s: &str) -> Self {
-        Self(s.to_owned())
+        Self::from(s.to_owned())
+    }
+}
+
+impl From<String> for Package {
+    fn from(s: String) -> Self {
+        Self(s)
     }
 }
 

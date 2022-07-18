@@ -47,6 +47,8 @@ enum Opt {
         newer: PathBuf,
         #[structopt(long, default_value = "text")]
         mode: crate::command::diff_snapshot::Mode,
+        #[structopt(long)]
+        ignore_file: Option<PathBuf>,
     },
     /// Print the number of reverse dependencies that are blocked by disabled packages
     Disabled {
@@ -101,9 +103,12 @@ fn main() {
             newer,
         } => command::affected::affected(&build_constraints, &older, &newer),
         Opt::Clear { build_constraints } => command::clear(&build_constraints),
-        Opt::DiffSnapshot { older, newer, mode } => {
-            command::diff_snapshot::diff_snapshot(&older, &newer, mode)
-        }
+        Opt::DiffSnapshot {
+            older,
+            newer,
+            mode,
+            ignore_file,
+        } => command::diff_snapshot::diff_snapshot(&older, &newer, mode, ignore_file.as_deref()),
         Opt::Disabled { build_constraints } => command::disabled::disabled(&build_constraints),
         Opt::Grandfather { build_constraints } => {
             command::grandfather::grandfather(&build_constraints)

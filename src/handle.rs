@@ -1,10 +1,11 @@
 use crate::prelude::*;
 
 use std::fs::File;
-use std::io::{BufRead, BufReader, LineWriter, Lines, Write};
+use std::io::{LineWriter, Write};
 
 use crate::regex::*;
 use crate::types::*;
+use crate::util::fs::read_lines;
 
 pub struct DisabledPackage {
     pub package: Package,
@@ -118,16 +119,6 @@ pub enum Location {
     Lib,
     Test,
     Bench,
-}
-
-fn read_lines<P>(filename: P) -> Lines<BufReader<File>>
-where
-    P: AsRef<Path> + fmt::Debug + Clone,
-{
-    let filen = filename.clone();
-    let file =
-        File::open(filename).unwrap_or_else(|e| panic!("Could not open {filen:?}, error: {e}"));
-    BufReader::new(file).lines()
 }
 
 fn parse_versioned_package_yaml(s: &str) -> Option<VersionedPackage> {
