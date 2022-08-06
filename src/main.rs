@@ -76,6 +76,8 @@ enum Opt {
     Outdated {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
+        #[structopt(long)]
+        ignore_file: Option<PathBuf>,
     },
     /// Dig out info about a package. The snapshot queries take a lot of time.
     PackageInfo {
@@ -117,7 +119,10 @@ fn main() {
             command::maintainers::maintainers(&build_constraints)
         }
         Opt::Multiple { build_constraints } => command::multiple::multiple(&build_constraints),
-        Opt::Outdated { build_constraints } => command::outdated::outdated(&build_constraints),
+        Opt::Outdated {
+            build_constraints,
+            ignore_file,
+        } => command::outdated::outdated(&build_constraints, ignore_file.as_deref()),
         Opt::PackageInfo {
             stackage_snapshots_path,
             no_search_snapshots,

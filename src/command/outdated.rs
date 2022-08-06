@@ -4,8 +4,9 @@ use crate::handle::{handle, DisabledPackage};
 use crate::latest_version::latest_version;
 use crate::regex::*;
 use crate::types::*;
+use crate::util::fs::read_lines;
 
-pub fn outdated(build_constraints: &Path) {
+pub fn outdated(build_constraints: &Path, ignore_file: Option<&Path>) {
     let mut all: Vec<String> = vec![];
     let (versioned, disabled) = handle(build_constraints, false, |_loc, lines| {
         all.extend(lines);
@@ -46,12 +47,25 @@ pub fn outdated(build_constraints: &Path) {
         latest_version(packages.iter())
     };
 
+    let ignores: HashSet<VersionedPackage> = if let Some(ignore_file) = ignore_file {
+        read_lines(ignore_file)
+            .map(|r| r.unwrap().try_into().unwrap())
+            .collect()
+    } else {
+        HashSet::new()
+    };
+
     for (package, version) in map {
         if is_boot(&package) {
             continue;
         }
         let latest = latest_versions.get(&package).unwrap();
-        if version.version() != latest {
+        if version.version() != latest
+            && !ignores.contains(&VersionedPackage {
+                package: package.clone(),
+                version: latest.clone(),
+            })
+        {
             println!(
                 "{package} mismatch, {tag}: {version}, hackage: {latest}",
                 tag = version.tag(),

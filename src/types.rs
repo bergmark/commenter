@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::prelude::*;
 
 #[derive(PartialOrd, Ord, PartialEq, Eq, Clone, Debug, Hash)]
@@ -78,5 +80,21 @@ impl fmt::Display for VersionedPackage {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let Self { package, version } = self;
         write!(f, "{package}-{version}")
+    }
+}
+
+impl TryFrom<String> for VersionedPackage {
+    type Error = ();
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        let s: Vec<&str> = s.split('-').collect();
+        if s.len() < 2 {
+            return Err(());
+        }
+        let version: String = s.last().unwrap().to_string();
+        let package: String = s[0..s.len() - 1].iter().join("-");
+        Ok(VersionedPackage {
+            package: package.into(),
+            version: Version::try_from(&*version).map_err(|_| ())?,
+        })
     }
 }
