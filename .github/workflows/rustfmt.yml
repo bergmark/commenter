@@ -1,0 +1,14 @@
+name: 'rustfmt'
+
+on:
+  push:
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: bergmark/rustfmt-check@ad911f9e4e742ed6ced6ea4ad37d0c58f2dba956 # 2023-04-25
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
