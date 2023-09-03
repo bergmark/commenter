@@ -78,6 +78,8 @@ enum Opt {
         build_constraints: PathBuf,
         #[structopt(long)]
         ignore_file: Option<PathBuf>,
+        ///// Show lines matching the package name in build-constraints
+        //show_lines: bool,
     },
     /// Dig out info about a package. The snapshot queries take a lot of time.
     PackageInfo {
