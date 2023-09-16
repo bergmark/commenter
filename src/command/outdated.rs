@@ -38,7 +38,7 @@ pub fn outdated(build_constraints: &Path, ignore_file: Option<&Path>, show_lines
     }
 
     let latest_versions = {
-        let mut packages: Vec<Package> = map.iter().map(|(package, _)| package.clone()).collect();
+        let mut packages: Vec<Package> = map.keys().cloned().collect();
         packages.append(
             &mut support
                 .iter()

@@ -26,11 +26,7 @@ pub fn diff_snapshot(a: &Path, b: &Path, mode: Mode, ignore_file: Option<&Path>)
 
     match mode {
         Mode::Text => {
-            diff.packages = diff
-                .packages
-                .into_iter()
-                .filter(|(p, _)| !ignores.contains(p))
-                .collect();
+            diff.packages.retain(|p, _| !ignores.contains(p));
 
             for (name, diff) in diff.packages {
                 let s = match diff {

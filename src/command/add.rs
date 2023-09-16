@@ -262,7 +262,7 @@ fn insert(
     bound: &Bound,
     component: &str,
 ) {
-    (*h.entry(header).or_insert_with(Vec::new)).push((
+    (*h.entry(header).or_default()).push((
         package.clone(),
         version.clone(),
         bound.clone(),

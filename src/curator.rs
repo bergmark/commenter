@@ -34,7 +34,7 @@ pub fn snapshot() {
 
 pub fn stack(ghc_version: &str) -> Vec<String> {
     let output = Command::new("stack")
-        .args(&[
+        .args([
             "--resolver",
             &*format!("ghc-{ghc_version}"),
             "exec",
