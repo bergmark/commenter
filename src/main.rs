@@ -78,8 +78,9 @@ enum Opt {
         build_constraints: PathBuf,
         #[structopt(long)]
         ignore_file: Option<PathBuf>,
-        ///// Show lines matching the package name in build-constraints
-        //show_lines: bool,
+        /// Show lines matching the package name in build-constraints
+        #[structopt(long)]
+        show_lines: bool,
     },
     /// Dig out info about a package. The snapshot queries take a lot of time.
     PackageInfo {
@@ -124,7 +125,8 @@ fn main() {
         Opt::Outdated {
             build_constraints,
             ignore_file,
-        } => command::outdated::outdated(&build_constraints, ignore_file.as_deref()),
+            show_lines,
+        } => command::outdated::outdated(&build_constraints, ignore_file.as_deref(), show_lines),
         Opt::PackageInfo {
             stackage_snapshots_path,
             no_search_snapshots,

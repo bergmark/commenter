@@ -6,7 +6,7 @@ use crate::regex::*;
 use crate::types::*;
 use crate::util::fs::read_lines;
 
-pub fn outdated(build_constraints: &Path, ignore_file: Option<&Path>) {
+pub fn outdated(build_constraints: &Path, ignore_file: Option<&Path>, show_lines: bool) {
     let mut all: Vec<String> = vec![];
     let (versioned, disabled) = handle(build_constraints, false, |_loc, lines| {
         all.extend(lines);
@@ -15,6 +15,7 @@ pub fn outdated(build_constraints: &Path, ignore_file: Option<&Path>) {
 
     for DisabledPackage { package } in disabled {
         println!("WARN: {package} is disabled without a noted version");
+        print_bc_lines(build_constraints, show_lines, package);
     }
 
     let mut map: BTreeMap<Package, VersionTag> = BTreeMap::new();
@@ -71,6 +72,7 @@ pub fn outdated(build_constraints: &Path, ignore_file: Option<&Path>) {
                 tag = version.tag(),
                 version = version.version(),
             );
+            print_bc_lines(build_constraints, show_lines, package);
         }
     }
 
@@ -98,6 +100,20 @@ pub fn outdated(build_constraints: &Path, ignore_file: Option<&Path>) {
             println!(
                 "{package} mismatch, snapshot: {version}, hackage: {latest}, dependents: {dependents}"
             );
+            print_bc_lines(build_constraints, show_lines, package);
+        }
+    }
+}
+
+fn print_bc_lines(build_constraints: &Path, show_lines: bool, package: Package) {
+    if !show_lines {
+        return;
+    }
+
+    for (i, line) in crate::util::fs::read_lines(build_constraints).enumerate() {
+        let line = line.unwrap();
+        if line.contains(package.as_ref()) {
+            println!("{i}: {line}");
         }
     }
 }

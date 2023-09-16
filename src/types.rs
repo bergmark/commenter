@@ -5,6 +5,12 @@ use crate::prelude::*;
 #[derive(PartialOrd, Ord, PartialEq, Eq, Clone, Debug, Hash)]
 pub struct Package(pub String);
 
+impl Package {
+    pub(crate) fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
 impl fmt::Display for Package {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
