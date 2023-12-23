@@ -25,6 +25,8 @@ enum Opt {
         build_constraints: PathBuf,
         #[structopt(long)]
         clear: bool,
+        #[structopt(long)]
+        target: Option<String>,
     },
     /// Takes the diff of two snapshots and produces packages +
     /// maintainers of any removed packages, to be able to ping all
@@ -101,7 +103,8 @@ fn main() {
         Opt::AddLoop {
             build_constraints,
             clear,
-        } => command::add_loop::add_loop(&build_constraints, clear),
+            target,
+        } => command::add_loop::add_loop(&build_constraints, clear, target),
         Opt::Affected {
             build_constraints,
             older,

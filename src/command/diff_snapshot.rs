@@ -13,8 +13,8 @@ pub enum Mode {
 
 pub fn diff_snapshot(a: &Path, b: &Path, mode: Mode, ignore_file: Option<&Path>) {
     let mut diff = to_diff(
-        yaml::yaml_from_file(a).unwrap(),
-        yaml::yaml_from_file(b).unwrap(),
+        yaml::yaml_from_file(a).unwrap_or_else(|e| panic!("Error reading snapshot {a:?}: {e}")),
+        yaml::yaml_from_file(b).unwrap_or_else(|e| panic!("Error reading snapshot {b:?}: {e}")),
     );
 
     let ignores = Ignores::from_path(ignore_file);

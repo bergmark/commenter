@@ -8,8 +8,16 @@ pub fn update() {
     }
 }
 
-pub fn constraints(target: &str) {
-    let res = call_curator(&["constraints", &*format!("--target={target}")]);
+pub fn constraints(target: &str, no_download: bool) {
+    let res = if no_download {
+        call_curator(&[
+            "constraints",
+            &*format!("--target={target}"),
+            "--no-download",
+        ])
+    } else {
+        call_curator(&["constraints", &*format!("--target={target}")])
+    };
 
     for line in lines(res.stderr) {
         println!("[curator constraints] {line}");
