@@ -7,7 +7,7 @@ use commenter::command;
 #[derive(Debug, Parser)]
 #[structopt(
     name = "commenter",
-    about = "Automates generation of bounds in  build-constraints.yaml"
+    about = "Automates operations on Stackage's build-constraints.yaml"
 )]
 enum Opt {
     /// Reads `curator` bounds failures from from stdin and disabled packages accordingly.
