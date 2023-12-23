@@ -1,8 +1,7 @@
 use crate::prelude::*;
 
+use crate::ignores::Ignores;
 use crate::snapshot::{to_diff, Diff, Snapshot};
-use crate::types::Package;
-use crate::util::fs::read_lines;
 use crate::yaml;
 
 #[derive(Debug, Clone, Copy, strum::EnumString)]
@@ -18,11 +17,7 @@ pub fn diff_snapshot(a: &Path, b: &Path, mode: Mode, ignore_file: Option<&Path>)
         yaml::yaml_from_file(b).unwrap(),
     );
 
-    let ignores: HashSet<Package> = if let Some(ignore_file) = ignore_file {
-        read_lines(ignore_file).map(|r| r.unwrap().into()).collect()
-    } else {
-        HashSet::new()
-    };
+    let ignores = Ignores::from_path(ignore_file);
 
     match mode {
         Mode::Text => {
@@ -43,7 +38,7 @@ pub fn diff_snapshot(a: &Path, b: &Path, mode: Mode, ignore_file: Option<&Path>)
     }
 }
 
-fn print_cabal_project(diff: Snapshot, ignores: HashSet<Package>) {
+fn print_cabal_project(diff: Snapshot, ignores: Ignores) {
     println!(
         "cabal-version: 2.4
 name: commenter

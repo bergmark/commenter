@@ -1,28 +1,10 @@
 use crate::prelude::*;
 
 use crate::handle::{handle, DisabledPackage};
+use crate::ignores::Ignores;
 use crate::latest_version::latest_version;
 use crate::regex::*;
 use crate::types::*;
-use crate::util::fs::read_lines;
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-enum Either<L, R> {
-    Left(L),
-    Right(R),
-}
-
-struct Ignores(HashSet<Either<VersionedPackage, Package>>);
-
-impl Ignores {
-    fn contains(&self, p: VersionedPackage) -> bool {
-        let package = p.package.clone();
-        self.0.contains(&Either::Left(p)) || self.0.contains(&Either::Right(package))
-    }
-    fn contains_unversioned_package(&self, p: Package) -> bool {
-        self.0.contains(&Either::Right(p))
-    }
-}
 
 pub fn outdated(build_constraints: &Path, ignore_file: Option<&Path>, show_lines: bool) {
     let mut all: Vec<String> = vec![];
@@ -32,23 +14,10 @@ pub fn outdated(build_constraints: &Path, ignore_file: Option<&Path>, show_lines
         vec![]
     });
 
-    let ignores: Ignores = Ignores(if let Some(ignore_file) = ignore_file {
-        read_lines(ignore_file)
-            .map(|r| {
-                let r = r.unwrap();
-                if let Ok(v) = VersionedPackage::try_from(r.clone()) {
-                    Either::Left(v)
-                } else {
-                    Either::Right(Package::from(r))
-                }
-            })
-            .collect()
-    } else {
-        HashSet::new()
-    });
+    let ignores = Ignores::from_path(ignore_file);
 
     for DisabledPackage { package } in disabled {
-        if !ignores.contains_unversioned_package(package.clone()) {
+        if !ignores.contains(&package) {
             println!("WARN: {package} is disabled without a noted version");
             print_bc_lines(build_constraints, show_lines, package);
         }
@@ -90,7 +59,7 @@ pub fn outdated(build_constraints: &Path, ignore_file: Option<&Path>, show_lines
         }
         let latest = latest_versions.get(&package).unwrap();
         if version.version() != latest
-            && !ignores.contains(VersionedPackage {
+            && !ignores.contains(&VersionedPackage {
                 package: package.clone(),
                 version: latest.clone(),
             })
