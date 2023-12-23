@@ -222,10 +222,11 @@ pub fn add_impl(build_constraints: &Path, lines: impl FnOnce() -> Vec<String>) -
 
     println!();
     println!(
-        "Adding {lib_exes} libs, {tests} tests, {benches} benches to build-constraints.yaml",
+        "Adding {lib_exes} libs, {tests} tests, {benches} benches to {build_constraints}",
         lib_exes = lib_exe_count,
         tests = auto_tests.len(),
-        benches = auto_benches.len()
+        benches = auto_benches.len(),
+        build_constraints = build_constraints.as_os_str().to_str().unwrap(),
     );
     adder(build_constraints, auto_lib_exes, auto_tests, auto_benches);
 
