@@ -107,7 +107,7 @@ fn print_bc_lines(build_constraints: &Path, show_lines: bool, package: Package) 
         return;
     }
 
-    for (i, line) in crate::util::fs::read_lines(build_constraints).enumerate() {
+    for (i, line) in fs::read_lines(build_constraints).enumerate() {
         let line = line.unwrap();
         if line.contains(package.as_ref()) {
             println!("{i}: {line}");

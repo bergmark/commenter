@@ -5,7 +5,6 @@ use std::io::{LineWriter, Write};
 
 use crate::regex::*;
 use crate::types::*;
-use crate::util::fs::read_lines;
 
 pub struct DisabledPackage {
     pub package: Package,
@@ -25,7 +24,7 @@ where
 
     let mut state = State::LookingForLibBounds;
     let mut buf = vec![];
-    for line in read_lines(build_constraints).map(|s| s.unwrap()) {
+    for line in fs::read_lines(build_constraints).map(|s| s.unwrap()) {
         if let Some(versioned_package) = parse_versioned_package_yaml(&line) {
             versioned_packages.push(versioned_package);
         } else if let Some(disabled_package) = parse_disabled_package(&line) {
