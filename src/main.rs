@@ -10,7 +10,7 @@ use commenter::command;
     about = "Automates operations on Stackage's build-constraints.yaml"
 )]
 enum Opt {
-    /// Reads `curator` bounds failures from from stdin and disabled packages accordingly.
+    /// Reads `curator` bounds failures from stdin and disables packages accordingly.
     Add {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
