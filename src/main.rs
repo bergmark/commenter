@@ -10,7 +10,7 @@ use commenter::command;
     about = "Automates generation of bounds in  build-constraints.yaml"
 )]
 enum Opt {
-    /// Reads `curator` bounds failures from stdin and disabled packages accordingly.
+    /// Reads `curator` bounds failures from stdin and disables packages accordingly.
     Add {
         #[structopt(short, long, default_value = "build-constraints.yaml")]
         build_constraints: PathBuf,
